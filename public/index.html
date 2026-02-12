@@ -8,11 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        /* ╔═══════════════════════════════════════════════════╗
-           ║  THEME — edit variables to reskin everything      ║
-           ╚═══════════════════════════════════════════════════╝ */
         :root {
-            /* ── gruvbox palette ────────────────────── */
             --bg0h:     #1d2021;
             --bg0:      #282828;
             --bg1:      #3c3836;
@@ -33,8 +29,6 @@
             --blue-d:   #458588;
             --orange-d: #d65d0e;
             --aqua-d:   #689d6a;
-
-            /* ── layout ─────────────────────────────── */
             --radius:       10px;
             --card-max:     660px;
             --table-max:    840px;
@@ -45,9 +39,7 @@
             --ease:         cubic-bezier(.4,0,.2,1);
             --shadow-hover: 0 8px 28px rgba(0,0,0,0.4);
         }
-
         * { box-sizing: border-box; margin: 0; padding: 0; }
-
         body {
             font-family: var(--font);
             background: var(--bg0h);
@@ -59,8 +51,6 @@
             min-height: 100vh;
             -webkit-font-smoothing: antialiased;
         }
-
-        /* ── keyframes ──────────────────────────────── */
         @keyframes enter {
             from { opacity: 0; transform: translateY(22px) scale(.97); }
             to   { opacity: 1; transform: translateY(0)   scale(1); }
@@ -77,8 +67,6 @@
             0%   { background-position: -200% 0; }
             100% { background-position: 200% 0; }
         }
-
-        /* ── title ──────────────────────────────────── */
         .title {
             color: var(--yellow);
             font-size: 1.4rem;
@@ -87,8 +75,6 @@
             letter-spacing: -.5px;
             animation: enter .55s var(--ease) both;
         }
-
-        /* ── cards ──────────────────────────────────── */
         .card {
             background: var(--bg1);
             padding: var(--card-pad);
@@ -117,8 +103,6 @@
             font-weight: 600;
             margin-bottom: 16px;
         }
-
-        /* ── mode toggle ────────────────────────────── */
         .toggle {
             display: flex;
             border-radius: 8px;
@@ -148,8 +132,6 @@
         .tog.on { background: var(--orange-d); color: var(--bg0); font-weight: 700; }
         .tog.on::after { width: 60%; }
         .tog:hover:not(.on) { background: var(--bg3); color: var(--fg); }
-
-        /* ── hint ───────────────────────────────────── */
         .hint {
             font-size: .62rem;
             color: var(--gray);
@@ -158,8 +140,6 @@
             transition: opacity .3s var(--ease);
         }
         .hint strong { color: var(--fg3); }
-
-        /* ── input ──────────────────────────────────── */
         .inp {
             width: 100%;
             padding: 12px 14px;
@@ -179,8 +159,6 @@
             border-color: var(--blue);
             box-shadow: 0 0 0 3px rgba(69,133,136,.18);
         }
-
-        /* ── button ─────────────────────────────────── */
         .btn {
             width: 100%;
             padding: 12px;
@@ -218,16 +196,12 @@
             background: var(--bg2); color: var(--bg3);
             cursor: not-allowed; transform: none;
         }
-
-        /* ── status ─────────────────────────────────── */
         #status { margin-top: 14px; min-height: 18px; font-size: .72rem; line-height: 1.7; word-break: break-word; }
         .st      { display: inline-block; animation: fadeUp .28s var(--ease); }
         .s-ok    { color: var(--green); }
         .s-err   { color: var(--red); }
         .s-load  { color: var(--orange); animation: pulse 1.6s ease-in-out infinite !important; }
         .s-mute  { color: var(--gray); }
-
-        /* ── table ──────────────────────────────────── */
         .scroll { overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; font-size: .7rem; }
         th {
@@ -244,7 +218,6 @@
         }
         tbody tr { transition: background var(--speed) var(--ease); }
         tbody tr:hover { background: rgba(80,73,69,.25); }
-
         .bar-bg {
             background: var(--bg2);
             width: 100%; height: 5px;
@@ -258,7 +231,6 @@
             transition: width .7s var(--ease);
         }
         .empty { text-align: center; color: var(--bg3); font-style: italic; padding: 18px 10px !important; }
-
         @media (max-width:520px) {
             body { padding: 14px 6px; }
             .card { padding: 16px; }
@@ -307,7 +279,7 @@
 <script src="/config.js"></script>
 <script>
 /* ╔═══════════════════════════════════════════════════════════════════╗
-   ║  CONFIG — edit anything here to customise behaviour              ║
+   ║  CONFIG                                                          ║
    ╚═══════════════════════════════════════════════════════════════════╝ */
 const CFG = {
 
@@ -316,38 +288,43 @@ const CFG = {
     API_BASE    : (window.SLSKD_CONFIG && window.SLSKD_CONFIG.API_BASE) || '/api/v0',
 
     // ─── Search Timing ──────────────────────────────────────────────
-    POLLS       : 24,        // number of polling rounds
-    DELAY       : 2500,      // ms between polls  (total max ≈ 60 s)
+    POLLS       : 24,
+    DELAY       : 2500,
 
     // ─── Album Rules ────────────────────────────────────────────────
-    MIN_TRACKS  : 4,         // minimum audio files for a folder to be an "album"
-    REL_GATE    : 0.45,      // 0–1  fraction of query words that must appear in path
+    MIN_TRACKS  : 4,
+    REL_GATE    : 0.45,
 
     // ─── Quality ────────────────────────────────────────────────────
-    MIN_KBPS    : 128,       // ignore lossy files below this bitrate
+    MIN_KBPS    : 128,
 
-    // ─── Scoring Weights (tweak to taste) ───────────────────────────
-    W_REL       : 200,       // relevance ceiling  (path matches all query words → 200)
-    W_FLAC      : 100,       // bonus for FLAC
-    W_320       : 65,        // 320 kbps
+    // ─── Scoring Weights ────────────────────────────────────────────
+    W_REL       : 200,
+    W_FLAC      : 100,
+    W_320       : 65,
     W_256       : 45,
     W_192       : 30,
     W_LOW       : 8,
-    W_TRACK     : 3,         // per extra track in album
-    W_TRACK_CAP : 45,        // max completeness bonus
-    W_SLOT      : 25,        // user has a free upload slot
-    W_Q_PEN     : 0.4,       // per queued item
-    W_Q_CAP     : 25,        // max queue penalty
-    W_NOISE     : 90,        // penalty for covers / remixes / tributes
+    W_TRACK     : 3,
+    W_TRACK_CAP : 45,
+    W_SLOT      : 25,
+    W_Q_PEN     : 0.4,
+    W_Q_CAP     : 25,
+    W_NOISE     : 90,
 
     // ─── Early-Exit Thresholds ──────────────────────────────────────
     ALBUM_EXIT_REL   : 0.75,
     ALBUM_EXIT_SCORE : 280,
     ALBUM_EXIT_FILES : 6,
-    ALBUM_EXIT_POLL  : 6,     // don't exit before this many polls
+    ALBUM_EXIT_POLL  : 6,
     TRACK_EXIT_REL   : 0.7,
     TRACK_EXIT_SCORE : 240,
     TRACK_EXIT_POLL  : 4,
+
+    // ─── Retry — auto-fallback on "File not shared" ─────────────────
+    RETRY       : 5,         // keep top N ranked sources as fallback
+    RETRY_MS    : 12000,     // monitor each attempt for this long (ms)
+    RETRY_POLL  : 1500,      // check download state every N ms
 
     // ─── Download Monitor ───────────────────────────────────────────
     MON_MS      : 2500
@@ -411,7 +388,7 @@ function relScore(text, ws) {
     const t = text.toLowerCase();
     let h = 0;
     for (const w of ws) if (t.includes(w)) h++;
-    return h / ws.length;            // 0 → 1
+    return h / ws.length;
 }
 
 function qualPts(files) {
@@ -431,9 +408,9 @@ function isLowQuality(f) {
 }
 
 
-/* ══════════════════ ALBUM FINDER ══════════════════════════════ */
+/* ══════════════════ RANKING (returns top-N arrays) ════════════ */
 
-function bestAlbum(responses, ws) {
+function rankAlbums(responses, ws) {
     const dirs = [];
 
     for (const r of responses) {
@@ -442,8 +419,8 @@ function bestAlbum(responses, ws) {
             if (!AUDIO.test(f.filename) || isLowQuality(f)) continue;
 
             const parts = f.filename.split('\\');
-            parts.pop();                            // drop file name
-            const key = r.username + '|' + parts.join('\\');   // unique per user+dir
+            parts.pop();
+            const key = r.username + '|' + parts.join('\\');
 
             if (!map[key]) {
                 map[key] = {
@@ -462,22 +439,20 @@ function bestAlbum(responses, ws) {
             if (d.files.length >= CFG.MIN_TRACKS) dirs.push(d);
     }
 
-    /* score every candidate directory */
     for (const d of dirs) {
         const rv = relScore(d.directory, ws);
         d.relevance = rv;
 
-        let s  = rv * CFG.W_REL;                                        // 0 – 200
-        s += qualPts(d.files);                                           // 0 – 100
-        s += Math.min(d.files.length * CFG.W_TRACK, CFG.W_TRACK_CAP);   // 0 –  45
-        if (d.freeSlot) s += CFG.W_SLOT;                                 //      25
-        s -= Math.min(d.queueLen * CFG.W_Q_PEN, CFG.W_Q_CAP);           // 0 – -25
-        if (NOISE.test(d.directory)) s -= CFG.W_NOISE;                   //     -90
+        let s  = rv * CFG.W_REL;
+        s += qualPts(d.files);
+        s += Math.min(d.files.length * CFG.W_TRACK, CFG.W_TRACK_CAP);
+        if (d.freeSlot) s += CFG.W_SLOT;
+        s -= Math.min(d.queueLen * CFG.W_Q_PEN, CFG.W_Q_CAP);
+        if (NOISE.test(d.directory)) s -= CFG.W_NOISE;
 
         d.score = s;
     }
 
-    /* keep only relevant dirs; fall back to all if none pass */
     let pool = dirs.filter(d => d.relevance >= CFG.REL_GATE);
     if (!pool.length) pool = dirs;
 
@@ -485,13 +460,11 @@ function bestAlbum(responses, ws) {
         if (b.score !== a.score) return b.score - a.score;
         return a.queueLen - b.queueLen;
     });
-    return pool[0] || null;
+    return pool.slice(0, CFG.RETRY);
 }
 
 
-/* ══════════════════ TRACK FINDER ══════════════════════════════ */
-
-function bestTrack(responses, ws) {
+function rankTracks(responses, ws) {
     const pool = [];
 
     for (const r of responses) {
@@ -524,11 +497,11 @@ function bestTrack(responses, ws) {
     }
 
     pool.sort((a, b) => b.score - a.score);
-    return pool[0] || null;
+    return pool.slice(0, CFG.RETRY);
 }
 
 
-/* ══════════════════ FETCH HELPER ══════════════════════════════ */
+/* ══════════════════ DOWNLOAD HELPERS ══════════════════════════ */
 
 async function jf(r) {
     if (r.status === 404 || r.status === 204) return null;
@@ -536,8 +509,84 @@ async function jf(r) {
     try { return t ? JSON.parse(t) : null; } catch { return null; }
 }
 
+/** Build { user, files, label } from any pick (album or track). */
+function prepPick(pick) {
+    const isAlb = Array.isArray(pick.files) && pick.files.length > 1 && !pick.file;
+    const user  = pick.username;
 
-/* ══════════════════ DOWNLOAD MONITOR ══════════════════════════ */
+    let files, label;
+    if (isAlb) {
+        files = pick.files.map(f => ({ filename: f.filename, size: f.size }));
+        const fl = pick.files.filter(f => /\.flac$/i.test(f.filename)).length;
+        const qt = fl >= pick.files.length * .75 ? 'FLAC' : `${pick.files.length} files`;
+        label = `📂 ${pick.dirName} · ${fl ? fl + ' FLAC' : qt} · ${user}`;
+    } else {
+        const f = pick.file || (pick.files && pick.files[0]);
+        files = [{ filename: f.filename, size: f.size }];
+        label = `♫ ${tail(f.filename)} · ${user}`;
+    }
+
+    return { user, files, label };
+}
+
+/**
+ * Check the download state for specific files queued from `user`.
+ * Returns: 'rejected' | 'ok' | 'pending'
+ */
+async function dlState(user, filenames) {
+    try {
+        const r = await fetch(`${CFG.API_BASE}/transfers/downloads`,
+                              { headers: { 'X-API-Key': CFG.API_KEY } });
+        const data = await jf(r);
+        if (!Array.isArray(data)) return 'pending';
+
+        const ue = data.find(u => u.username === user);
+        if (!ue) return 'pending';
+
+        /* collect every file object for this user */
+        const all = [];
+        for (const dir of (ue.directories || []))
+            for (const f of (dir.files || [])) all.push(f);
+        if (!ue.directories && ue.files)
+            for (const f of ue.files) all.push(f);
+
+        /* match our filenames (case-insensitive) */
+        const want    = new Set(filenames.map(n => n.toLowerCase()));
+        const matched = all.filter(f => f.filename && want.has(f.filename.toLowerCase()));
+
+        if (!matched.length) return 'pending';      // not yet registered
+
+        if (matched.some(f => /rejected|errored/i.test(f.state || '')))
+            return 'rejected';
+        if (matched.some(f => /progress|initializ|complet|succeed/i.test(f.state || '')))
+            return 'ok';
+
+        return 'pending';                            // still queued / requested
+    } catch { return 'pending'; }
+}
+
+/**
+ * Monitor a queued download for quick rejection.
+ * Returns 'rejected' fast if the peer refuses, otherwise 'ok'.
+ */
+async function awaitDl(user, filenames) {
+    const deadline = Date.now() + CFG.RETRY_MS;
+
+    /* small delay before first check — let slskd register the transfer */
+    await new Promise(ok => setTimeout(ok, CFG.RETRY_POLL));
+
+    while (Date.now() < deadline) {
+        const s = await dlState(user, filenames);
+        if (s === 'rejected') return 'rejected';
+        if (s === 'ok')       return 'ok';
+        await new Promise(ok => setTimeout(ok, CFG.RETRY_POLL));
+    }
+
+    return 'ok';   // timeout → assume it's working (peer may just have a long queue)
+}
+
+
+/* ══════════════════ DOWNLOAD MONITOR (table) ══════════════════ */
 
 setInterval(mon, CFG.MON_MS);
 
@@ -603,7 +652,7 @@ async function go() {
         const sid = sd.id;
 
         /* ── 2  poll for responses ─────────────────────────────── */
-        let pick = null, sources = 0, lastRes = [];
+        let candidates = [], sources = 0, lastRes = [];
 
         for (let i = 0; i < CFG.POLLS; i++) {
             stat(`<span class="s-load">poll ${i+1}/${CFG.POLLS} · ${sources} sources</span>`);
@@ -620,63 +669,80 @@ async function go() {
             if (!sources) continue;
             lastRes = res;
 
-            pick = mode === 'album' ? bestAlbum(res, ws) : bestTrack(res, ws);
+            candidates = mode === 'album' ? rankAlbums(res, ws) : rankTracks(res, ws);
+            const best = candidates[0];
 
             /* early exit when confident */
-            if (pick && mode === 'album'
-                && pick.relevance >= CFG.ALBUM_EXIT_REL
-                && pick.score     >= CFG.ALBUM_EXIT_SCORE
-                && pick.files.length >= CFG.ALBUM_EXIT_FILES
+            if (best && mode === 'album'
+                && best.relevance >= CFG.ALBUM_EXIT_REL
+                && best.score     >= CFG.ALBUM_EXIT_SCORE
+                && best.files.length >= CFG.ALBUM_EXIT_FILES
                 && i >= CFG.ALBUM_EXIT_POLL) break;
 
-            if (pick && mode === 'track'
-                && pick.relevance >= CFG.TRACK_EXIT_REL
-                && pick.score     >= CFG.TRACK_EXIT_SCORE
+            if (best && mode === 'track'
+                && best.relevance >= CFG.TRACK_EXIT_REL
+                && best.score     >= CFG.TRACK_EXIT_SCORE
                 && i >= CFG.TRACK_EXIT_POLL) break;
         }
 
         /* ── 2b  fallback to opposite mode ─────────────────────── */
-        if (!pick && lastRes.length) {
-            pick = mode === 'album' ? bestTrack(lastRes, ws) : bestAlbum(lastRes, ws);
-            if (pick) pick._fb = mode === 'album' ? 'track' : 'album';
+        let fb = null;
+        if (!candidates.length && lastRes.length) {
+            candidates = mode === 'album' ? rankTracks(lastRes, ws) : rankAlbums(lastRes, ws);
+            if (candidates.length) fb = mode === 'album' ? 'track' : 'album';
         }
 
-        if (!pick) throw new Error(
+        if (!candidates.length) throw new Error(
             `no ${mode} results across ${sources} sources — try simpler or different terms`
         );
 
-        /* ── 3  queue download ─────────────────────────────────── */
-        const isAlb = !pick.file && pick.files && pick.files.length > 1;
-        const user  = pick.username;
-        const files = isAlb
-            ? pick.files.map(f => ({ filename: f.filename, size: f.size }))
-            : [(() => { const f = pick.file || pick.files[0]; return { filename: f.filename, size: f.size }; })()];
+        /* ── 3  try candidates with auto-retry ─────────────────── */
+        let queued   = false;
+        let lastErr  = '';
 
-        const label = isAlb
-            ? (() => {
-                const fl = pick.files.filter(f => /\.flac$/i.test(f.filename)).length;
-                const qt = fl >= pick.files.length * .75 ? 'FLAC' : `${pick.files.length} files`;
-                return `📂 ${pick.dirName} · ${fl ? fl + ' FLAC' : qt} · ${user}`;
-              })()
-            : `♫ ${tail((pick.file || pick.files[0]).filename)} · ${user}`;
+        for (let a = 0; a < candidates.length; a++) {
+            const { user, files, label } = prepPick(candidates[a]);
+            const tag = candidates.length > 1 ? ` [${a+1}/${candidates.length}]` : '';
 
-        stat(`<span class="s-load">queueing ${files.length} file${files.length > 1 ? 's' : ''} …</span>`);
+            stat(`<span class="s-load">queueing${tag} from ${user} …</span>`);
 
-        const dr = await fetch(
-            `${CFG.API_BASE}/transfers/downloads/${encodeURIComponent(user)}`, {
-                method: 'POST',
-                headers: { 'X-API-Key': CFG.API_KEY, 'Content-Type': 'application/json' },
-                body: JSON.stringify(files)
-            });
+            const dr = await fetch(
+                `${CFG.API_BASE}/transfers/downloads/${encodeURIComponent(user)}`, {
+                    method : 'POST',
+                    headers: { 'X-API-Key': CFG.API_KEY, 'Content-Type': 'application/json' },
+                    body   : JSON.stringify(files)
+                });
 
-        if (dr.ok || dr.status === 201) {
-            const fb = pick._fb
-                ? `<br><span class="s-mute">(no ${mode} found — used ${pick._fb} mode)</span>` : '';
-            stat(`<span class="s-ok">✓ queued — ${label}</span>${fb}`);
+            if (!dr.ok && dr.status !== 201) {
+                lastErr = `queue failed (${dr.status})`;
+                continue;
+            }
+
+            /* monitor for quick rejection — skip on last candidate */
+            if (a < candidates.length - 1) {
+                stat(`<span class="s-load">verifying${tag} …</span>`);
+                const result = await awaitDl(user, files.map(f => f.filename));
+                if (result === 'rejected') {
+                    lastErr = `${user} rejected`;
+                    stat(`<span class="s-mute">source ${a+1} rejected, trying next …</span>`);
+                    continue;
+                }
+            }
+
+            /* success */
+            const fbNote = fb
+                ? `<br><span class="s-mute">(no ${mode} found — used ${fb} mode)</span>` : '';
+            const retryNote = a > 0
+                ? `<br><span class="s-mute">(attempt ${a+1} of ${candidates.length})</span>` : '';
+            stat(`<span class="s-ok">✓ queued — ${label}</span>${fbNote}${retryNote}`);
             document.getElementById('q').value = '';
-        } else {
-            throw new Error(`download failed (${dr.status}): ${await dr.text()}`);
+            queued = true;
+            break;
         }
+
+        if (!queued) throw new Error(
+            `all ${candidates.length} sources failed (${lastErr})`
+        );
 
         /* clean up search */
         fetch(`${CFG.API_BASE}/searches/${sid}`,
