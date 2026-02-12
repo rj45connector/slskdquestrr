@@ -381,8 +381,8 @@
         <button class="tog"    onclick="setMode('track',this)">♫ track</button>
     </div>
     <div class="hint" id="hint">
-        downloads a complete album folder.<br>
-        try: <strong>bob dylan blood on the tracks</strong>sunny day real estate diary<strong></strong>
+        downloads a complete album folder in the best available quality.<br>
+        try: <strong>bob dylan blood on the tracks</strong> · <strong>nick drake pink moon</strong></strong>
     </div>
     <input class="inp" type="text" id="q"
            placeholder="artist album..."
@@ -578,7 +578,7 @@ function setMode(m, el) {
     if (m === 'album') {
         h.innerHTML =
             'downloads a complete album folder in the best available quality.<br>' +
-            'try: <strong>bob dylan blood on the tracks</strong> · <strong>bob dylan blood on the tracks</strong>';
+            'try: <strong>bob dylan blood on the tracks</strong> · <strong>nick drake pink moon</strong>';
         q.placeholder = 'artist album...';
     } else {
         h.innerHTML =
