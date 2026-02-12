@@ -231,11 +231,48 @@
             transition: width .7s var(--ease);
         }
         .empty { text-align: center; color: var(--bg3); font-style: italic; padding: 18px 10px !important; }
+
+        /* ── retry notifications ────────────────────── */
+        .retry-bar {
+            background: var(--bg2);
+            border-radius: 8px;
+            padding: 9px 14px;
+            margin-top: 10px;
+            font-size: .68rem;
+            color: var(--fg3);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            animation: fadeUp .28s var(--ease);
+        }
+        .retry-bar .query { color: var(--fg2); font-weight: 600; }
+        .retry-bar .src   { color: var(--gray); }
+        .retry-btn {
+            font: 600 .62rem var(--font);
+            background: var(--orange-d);
+            color: var(--fg);
+            border: none;
+            border-radius: 5px;
+            padding: 5px 12px;
+            cursor: pointer;
+            transition: all .2s var(--ease);
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .retry-btn:hover {
+            background: var(--orange);
+            color: var(--bg0);
+            transform: translateY(-1px);
+            box-shadow: 0 3px 10px rgba(214,93,14,.3);
+        }
+
         @media (max-width:520px) {
             body { padding: 14px 6px; }
             .card { padding: 16px; }
             td,th { padding: 5px 6px; font-size: .64rem; }
             td { max-width: 110px; }
+            .retry-bar { flex-direction: column; align-items: flex-start; gap: 6px; }
         }
     </style>
 </head>
@@ -273,6 +310,7 @@
             <tbody id="dl"><tr><td colspan="4" class="empty">nothing yet.</td></tr></tbody>
         </table>
     </div>
+    <div id="retries"></div>
 </div>
 
 <!-- ═══════════════════════════════════════════════════════════════ -->
@@ -321,10 +359,15 @@ const CFG = {
     TRACK_EXIT_SCORE : 240,
     TRACK_EXIT_POLL  : 4,
 
-    // ─── Retry — auto-fallback on "File not shared" ─────────────────
-    RETRY       : 5,         // keep top N ranked sources as fallback
-    RETRY_MS    : 12000,     // monitor each attempt for this long (ms)
-    RETRY_POLL  : 1500,      // check download state every N ms
+    // ─── Instant Retry — reject / immediate failures ────────────────
+    RETRY       : 5,
+    RETRY_MS    : 12000,
+    RETRY_POLL  : 1500,
+
+    // ─── Background Watcher — timeout / delayed failures ────────────
+    WATCH_GRACE : 90000,     // 90 s grace before auto-retrying timed-out downloads
+    WATCH_MAX   : 3,         // max background auto-retries per job
+    WATCH_POLL  : 10000,     // run watcher every 10 s (inside mon cycle)
 
     // ─── Download Monitor ───────────────────────────────────────────
     MON_MS      : 2500
@@ -332,7 +375,7 @@ const CFG = {
 /* ═══════════════════════════════════════════════════════════════════ */
 
 
-/* ── constants ──────────────────────────────────────────────────── */
+/* ── constants & state ──────────────────────────────────────────── */
 const AUDIO = /\.(flac|mp3|ogg|opus|m4a|aac|wav|wma|alac|ape|wv)$/i;
 const NOISE = /\b(cover|covers|covered|remix|remixed|remixes|bootleg|tribute|karaoke|mashup|8[- ]?bit)\b/i;
 const STOPS = new Set(
@@ -340,6 +383,8 @@ const STOPS = new Set(
 );
 
 let mode = 'album';
+const watchlist = new Map();   // jobId → { query, mode, ws, candidates, attempt, user, filenames, label, queuedAt, retries, exhausted, retrying }
+let lastWatch = 0;
 
 
 /* ══════════════════ UI HELPERS ═════════════════════════════════ */
@@ -368,6 +413,7 @@ function stat(html) {
 }
 
 function tail(p) { return p.split('\\').pop(); }
+function esc(s) { return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]); }
 
 
 /* ══════════════════ QUERY + SCORING ═══════════════════════════ */
@@ -417,11 +463,9 @@ function rankAlbums(responses, ws) {
         const map = {};
         for (const f of (r.files || [])) {
             if (!AUDIO.test(f.filename) || isLowQuality(f)) continue;
-
             const parts = f.filename.split('\\');
             parts.pop();
             const key = r.username + '|' + parts.join('\\');
-
             if (!map[key]) {
                 map[key] = {
                     username : r.username,
@@ -434,7 +478,6 @@ function rankAlbums(responses, ws) {
             }
             map[key].files.push(f);
         }
-
         for (const d of Object.values(map))
             if (d.files.length >= CFG.MIN_TRACKS) dirs.push(d);
     }
@@ -442,14 +485,12 @@ function rankAlbums(responses, ws) {
     for (const d of dirs) {
         const rv = relScore(d.directory, ws);
         d.relevance = rv;
-
         let s  = rv * CFG.W_REL;
         s += qualPts(d.files);
         s += Math.min(d.files.length * CFG.W_TRACK, CFG.W_TRACK_CAP);
         if (d.freeSlot) s += CFG.W_SLOT;
         s -= Math.min(d.queueLen * CFG.W_Q_PEN, CFG.W_Q_CAP);
         if (NOISE.test(d.directory)) s -= CFG.W_NOISE;
-
         d.score = s;
     }
 
@@ -463,14 +504,11 @@ function rankAlbums(responses, ws) {
     return pool.slice(0, CFG.RETRY);
 }
 
-
 function rankTracks(responses, ws) {
     const pool = [];
-
     for (const r of responses) {
         for (const f of (r.files || [])) {
             if (!AUDIO.test(f.filename) || isLowQuality(f)) continue;
-
             const rv = relScore(f.filename, ws);
             if (rv < CFG.REL_GATE) continue;
 
@@ -495,7 +533,6 @@ function rankTracks(responses, ws) {
             });
         }
     }
-
     pool.sort((a, b) => b.score - a.score);
     return pool.slice(0, CFG.RETRY);
 }
@@ -509,11 +546,9 @@ async function jf(r) {
     try { return t ? JSON.parse(t) : null; } catch { return null; }
 }
 
-/** Build { user, files, label } from any pick (album or track). */
 function prepPick(pick) {
     const isAlb = Array.isArray(pick.files) && pick.files.length > 1 && !pick.file;
     const user  = pick.username;
-
     let files, label;
     if (isAlb) {
         files = pick.files.map(f => ({ filename: f.filename, size: f.size }));
@@ -525,13 +560,22 @@ function prepPick(pick) {
         files = [{ filename: f.filename, size: f.size }];
         label = `♫ ${tail(f.filename)} · ${user}`;
     }
-
     return { user, files, label };
 }
 
+/** Collect files from a slskd user download entry. */
+function collectFiles(ue) {
+    const all = [];
+    for (const dir of (ue.directories || []))
+        for (const f of (dir.files || [])) all.push(f);
+    if (!ue.directories && ue.files)
+        for (const f of ue.files) all.push(f);
+    return all;
+}
+
 /**
- * Check the download state for specific files queued from `user`.
- * Returns: 'rejected' | 'ok' | 'pending'
+ * Check the download state for specific files from `user`.
+ * Returns: 'completed' | 'progressing' | 'pending' | 'rejected' | 'timedout' | 'errored'
  */
 async function dlState(user, filenames) {
     try {
@@ -543,46 +587,149 @@ async function dlState(user, filenames) {
         const ue = data.find(u => u.username === user);
         if (!ue) return 'pending';
 
-        /* collect every file object for this user */
-        const all = [];
-        for (const dir of (ue.directories || []))
-            for (const f of (dir.files || [])) all.push(f);
-        if (!ue.directories && ue.files)
-            for (const f of ue.files) all.push(f);
-
-        /* match our filenames (case-insensitive) */
-        const want    = new Set(filenames.map(n => n.toLowerCase()));
+        const all  = collectFiles(ue);
+        const want = new Set(filenames.map(n => n.toLowerCase()));
         const matched = all.filter(f => f.filename && want.has(f.filename.toLowerCase()));
 
-        if (!matched.length) return 'pending';      // not yet registered
+        if (!matched.length) return 'pending';
 
-        if (matched.some(f => /rejected|errored/i.test(f.state || '')))
-            return 'rejected';
-        if (matched.some(f => /progress|initializ|complet|succeed/i.test(f.state || '')))
-            return 'ok';
+        let ok = 0, prog = 0, rej = 0, tout = 0, err = 0;
+        for (const f of matched) {
+            const st = f.state || '';
+            if      (/Succeed/i.test(st))            ok++;
+            else if (/Progress|Initializ/i.test(st)) prog++;
+            else if (/Reject/i.test(st))             rej++;
+            else if (/Timed|Timeout/i.test(st))      tout++;
+            else if (/Error|Fail|Abort/i.test(st))   err++;
+            /* else: Queued / Requested / unknown → pending */
+        }
 
-        return 'pending';                            // still queued / requested
+        if (prog > 0) return 'progressing';
+        if (ok === matched.length) return 'completed';
+        if (rej  > 0) return 'rejected';
+        if (tout > 0) return 'timedout';
+        if (err  > 0) return 'errored';
+
+        return 'pending';
     } catch { return 'pending'; }
 }
 
 /**
- * Monitor a queued download for quick rejection.
- * Returns 'rejected' fast if the peer refuses, otherwise 'ok'.
+ * Monitor a queued download for quick rejection / timeout.
+ * Returns 'failed' fast if the peer refuses, otherwise 'ok'.
  */
 async function awaitDl(user, filenames) {
     const deadline = Date.now() + CFG.RETRY_MS;
-
-    /* small delay before first check — let slskd register the transfer */
     await new Promise(ok => setTimeout(ok, CFG.RETRY_POLL));
 
     while (Date.now() < deadline) {
         const s = await dlState(user, filenames);
-        if (s === 'rejected') return 'rejected';
-        if (s === 'ok')       return 'ok';
+        if (s === 'rejected' || s === 'timedout' || s === 'errored') return 'failed';
+        if (s === 'progressing' || s === 'completed') return 'ok';
         await new Promise(ok => setTimeout(ok, CFG.RETRY_POLL));
     }
 
-    return 'ok';   // timeout → assume it's working (peer may just have a long queue)
+    return 'ok';   // monitoring timeout → assume working
+}
+
+
+/* ══════════════════ BACKGROUND WATCHER ════════════════════════ */
+
+async function watchJobs() {
+    for (const [id, job] of watchlist) {
+        if (job.exhausted || job.retrying) continue;
+
+        /* first failure: generous grace for timeouts;
+           subsequent retries: shorter grace for quick rejects */
+        const grace = job.retries === 0 ? CFG.WATCH_GRACE : CFG.RETRY_MS * 2;
+        if (Date.now() - job.queuedAt < grace) continue;
+
+        const state = await dlState(job.user, job.filenames);
+
+        if (state === 'completed') { watchlist.delete(id); continue; }
+        if (state === 'progressing' || state === 'pending') continue;
+
+        /* ── failed: rejected / timedout / errored ── */
+        const next = job.attempt + 1;
+        if (next < job.candidates.length && job.retries < CFG.WATCH_MAX) {
+            job.retrying = true;
+            try {
+                const { user, files, label } = prepPick(job.candidates[next]);
+                const dr = await fetch(
+                    `${CFG.API_BASE}/transfers/downloads/${encodeURIComponent(user)}`, {
+                        method : 'POST',
+                        headers: { 'X-API-Key': CFG.API_KEY, 'Content-Type': 'application/json' },
+                        body   : JSON.stringify(files)
+                    });
+
+                if (dr.ok || dr.status === 201) {
+                    job.attempt   = next;
+                    job.user      = user;
+                    job.filenames = files.map(f => f.filename);
+                    job.label     = label;
+                    job.queuedAt  = Date.now();
+                    job.retries++;
+                    console.log(`[watch] auto-retry "${job.query}" → ${user} (attempt ${job.retries})`);
+                } else {
+                    /* queue call itself failed — advance attempt so next cycle tries the one after */
+                    job.attempt = next;
+                }
+            } catch (e) { console.error('[watch] retry error', e); }
+            job.retrying = false;
+        } else {
+            job.exhausted = true;
+            console.log(`[watch] "${job.query}" exhausted all ${job.candidates.length} sources`);
+        }
+    }
+
+    /* clean up stale jobs (> 2 hours) */
+    const stale = Date.now() - 7200000;
+    for (const [id, job] of watchlist) {
+        if (job.queuedAt < stale) watchlist.delete(id);
+    }
+}
+
+/** Render retry notification bars below the downloads table. */
+function updateRetryArea() {
+    const el = document.getElementById('retries');
+    if (!el) return;
+
+    const bars = [];
+    for (const [id, job] of watchlist) {
+        if (job.retrying) {
+            bars.push(`<div class="retry-bar">
+                <span><span class="s-load">↻</span> retrying
+                    <span class="query">"${esc(job.query)}"</span>
+                    <span class="src">from ${esc(job.user)} · source ${job.attempt + 1}/${job.candidates.length}</span>
+                </span>
+            </div>`);
+        } else if (job.exhausted) {
+            bars.push(`<div class="retry-bar">
+                <span><span class="s-err">✗</span>
+                    <span class="query">"${esc(job.query)}"</span>
+                    — all ${job.candidates.length} sources failed
+                </span>
+                <button class="retry-btn" onclick="manualRetry('${id}')">↻ retry search</button>
+            </div>`);
+        }
+    }
+    el.innerHTML = bars.join('');
+}
+
+/** Manual retry: repopulate search box and rerun go(). */
+function manualRetry(id) {
+    const job = watchlist.get(id);
+    if (!job) return;
+
+    document.getElementById('q').value = job.query;
+
+    if (mode !== job.mode) {
+        const btns = document.querySelectorAll('.tog');
+        setMode(job.mode, job.mode === 'album' ? btns[0] : btns[1]);
+    }
+
+    watchlist.delete(id);
+    go();
 }
 
 
@@ -599,30 +746,37 @@ async function mon() {
         const rows = [];
 
         if (Array.isArray(d)) for (const u of d) {
-            for (const dir of (u.directories || []))
-                for (const f of (dir.files || [])) rows.push({ user: u.username, f });
-            if (!u.directories && u.files)
-                for (const f of u.files) rows.push({ user: u.username, f });
+            const all = collectFiles(u);
+            for (const f of all) rows.push({ user: u.username, f });
         }
 
         if (!rows.length) {
             tb.innerHTML = '<tr><td colspan="4" class="empty">nothing active.</td></tr>';
-            return;
+        } else {
+            tb.innerHTML = rows.map(({ user, f }) => {
+                const p  = f.percentComplete != null
+                         ? f.percentComplete.toFixed(1)
+                         : f.size > 0 ? ((f.bytesTransferred||0)/f.size*100).toFixed(1) : '0.0';
+                const st = f.state || '…';
+                const c  = /complet.*succeed|succeed/i.test(st) ? 's-ok'
+                         : /error|fail|abort|cancel|timed|reject/i.test(st) ? 's-err' : '';
+                return `<tr>
+                    <td title="${esc(f.filename)}">${esc(tail(f.filename))}</td>
+                    <td>${esc(user)}</td>
+                    <td><div class="bar-bg"><div class="bar-fg" style="width:${p}%"></div></div>${p}%</td>
+                    <td class="${c}">${esc(st)}</td></tr>`;
+            }).join('');
         }
 
-        tb.innerHTML = rows.map(({ user, f }) => {
-            const p  = f.percentComplete != null
-                     ? f.percentComplete.toFixed(1)
-                     : f.size > 0 ? ((f.bytesTransferred||0)/f.size*100).toFixed(1) : '0.0';
-            const st = f.state || '…';
-            const c  = /complet|succeed/i.test(st) ? 's-ok'
-                     : /error|fail|abort|cancel|timed|reject/i.test(st) ? 's-err' : '';
-            return `<tr>
-                <td title="${f.filename}">${tail(f.filename)}</td>
-                <td>${user}</td>
-                <td><div class="bar-bg"><div class="bar-fg" style="width:${p}%"></div></div>${p}%</td>
-                <td class="${c}">${st}</td></tr>`;
-        }).join('');
+        /* run background watcher every WATCH_POLL ms */
+        if (watchlist.size > 0 && Date.now() - lastWatch >= CFG.WATCH_POLL) {
+            lastWatch = Date.now();
+            await watchJobs();
+        }
+
+        /* always refresh retry UI */
+        updateRetryArea();
+
     } catch (e) { console.error('mon', e); }
 }
 
@@ -637,7 +791,7 @@ async function go() {
     const ws  = sigWords(q);
     const btn = document.getElementById('goBtn');
     btn.disabled = true;
-    stat(`<span class="s-load">searching "${q}" …</span>`);
+    stat(`<span class="s-load">searching "${esc(q)}" …</span>`);
 
     try {
         /* ── 1  create search ──────────────────────────────────── */
@@ -672,7 +826,6 @@ async function go() {
             candidates = mode === 'album' ? rankAlbums(res, ws) : rankTracks(res, ws);
             const best = candidates[0];
 
-            /* early exit when confident */
             if (best && mode === 'album'
                 && best.relevance >= CFG.ALBUM_EXIT_REL
                 && best.score     >= CFG.ALBUM_EXIT_SCORE
@@ -696,15 +849,16 @@ async function go() {
             `no ${mode} results across ${sources} sources — try simpler or different terms`
         );
 
-        /* ── 3  try candidates with auto-retry ─────────────────── */
+        /* ── 3  try candidates with instant-retry ──────────────── */
         let queued   = false;
         let lastErr  = '';
+        let winIdx   = -1;
 
         for (let a = 0; a < candidates.length; a++) {
             const { user, files, label } = prepPick(candidates[a]);
             const tag = candidates.length > 1 ? ` [${a+1}/${candidates.length}]` : '';
 
-            stat(`<span class="s-load">queueing${tag} from ${user} …</span>`);
+            stat(`<span class="s-load">queueing${tag} from ${esc(user)} …</span>`);
 
             const dr = await fetch(
                 `${CFG.API_BASE}/transfers/downloads/${encodeURIComponent(user)}`, {
@@ -718,18 +872,16 @@ async function go() {
                 continue;
             }
 
-            /* monitor for quick rejection — skip on last candidate */
-            if (a < candidates.length - 1) {
-                stat(`<span class="s-load">verifying${tag} …</span>`);
-                const result = await awaitDl(user, files.map(f => f.filename));
-                if (result === 'rejected') {
-                    lastErr = `${user} rejected`;
-                    stat(`<span class="s-mute">source ${a+1} rejected, trying next …</span>`);
-                    continue;
-                }
+            /* monitor for quick failure */
+            stat(`<span class="s-load">verifying${tag} …</span>`);
+            const result = await awaitDl(user, files.map(f => f.filename));
+            if (result === 'failed') {
+                lastErr = `${user} rejected / timed out`;
+                stat(`<span class="s-mute">source ${a+1} failed, trying next …</span>`);
+                continue;
             }
 
-            /* success */
+            /* ── success ── */
             const fbNote = fb
                 ? `<br><span class="s-mute">(no ${mode} found — used ${fb} mode)</span>` : '';
             const retryNote = a > 0
@@ -737,6 +889,25 @@ async function go() {
             stat(`<span class="s-ok">✓ queued — ${label}</span>${fbNote}${retryNote}`);
             document.getElementById('q').value = '';
             queued = true;
+            winIdx = a;
+
+            /* ── save to watchlist for background monitoring ── */
+            const jobId = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+            watchlist.set(jobId, {
+                query      : q,
+                mode       : fb || mode,
+                ws         : ws,
+                candidates : candidates,
+                attempt    : a,
+                user       : user,
+                filenames  : files.map(f => f.filename),
+                label      : label,
+                queuedAt   : Date.now(),
+                retries    : 0,
+                exhausted  : false,
+                retrying   : false
+            });
+
             break;
         }
 
