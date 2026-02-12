@@ -193,10 +193,10 @@ docker run --rm -p 8082:80 \
 
 | Piece | Purpose |
 |---|---|
-| `Dockerfile` | Builds a ~7 MB `nginx:alpine` image with the frontend baked in |
-| `entrypoint.sh` | At startup: generates `/config.js` from env vars, processes the nginx template, starts nginx |
-| `config.js` (generated) | Passes `SLSKD_API_KEY` and `API_BASE` to the browser JS at runtime — no rebuild needed to change config |
-| `default.conf.template` | Nginx serves the HTML at `/` and proxies `/api/v0/*` → slskd — eliminates CORS entirely |
-| `index.html` | Reads connection info from `window.SLSKD_CONFIG` (loaded via `config.js`) instead of hard-coding it |
+| `Dockerfile` | Builds a `nginx:alpine` image |
+| `entrypoint.sh` | generates `/config.js` from env vars, processes the nginx template, starts nginx |
+| `config.js` (generated) | Passes `API_BASE` to the browser JS at runtime |
+| `default.conf.template` | Nginx serves the HTML at `/` and proxies `/api/v0/*` -> slskd — eliminates CORS |
+| `index.html` | Reads connection info from `window.SLSKD_CONFIG` (loaded via `config.js`) |
 
 > **Security note:** Your Bearer Token is visible via HTTP. This is acceptable for a private, self-hosted tool behind your LAN/VPN. Do **not** expose port 8082 to the public internet without additional authentication (e.g., Authelia, Authentik, or HTTP basic auth in nginx).
