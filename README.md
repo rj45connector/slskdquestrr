@@ -10,6 +10,8 @@ need to touch the slskd interface.
 ![screenshot](https://img.shields.io/badge/status-stable-green)
 ![docker](https://img.shields.io/badge/docker-ready-blue)
 
+![demo](assets/demo.gif)
+
 ---
 
 ## Features
