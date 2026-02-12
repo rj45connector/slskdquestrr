@@ -1,23 +1,29 @@
 #!/bin/sh
 set -e
 
-SAFE_KEY=$(printf '%s' "${SLSKD_API_KEY}" | sed 's/["\]/\\&/g')
+SLSKD_BASE_URL="${SLSKD_BASE_URL:-http://localhost:5030}"
+SLSKD_API_KEY="${SLSKD_API_KEY:-}"
 
+# ── strip trailing slash from base URL ──
+SLSKD_BASE_URL="${SLSKD_BASE_URL%/}"
+
+# ── render nginx config ──
+sed \
+  -e "s|__SLSKD_BASE_URL__|${SLSKD_BASE_URL}|g" \
+  -e "s|__SLSKD_API_KEY__|${SLSKD_API_KEY}|g" \
+  /etc/nginx/templates/nginx.conf.template \
+  > /etc/nginx/conf.d/default.conf
+
+# ── render frontend config.js ──
 cat > /usr/share/nginx/html/config.js <<EOF
 window.SLSKD_CONFIG = {
-    API_KEY  : "${SAFE_KEY}",
+    API_KEY  : "${SLSKD_API_KEY}",
     API_BASE : "/api/v0"
 };
 EOF
 
 echo "[slskdquestrr] config.js written  (proxy -> ${SLSKD_BASE_URL})"
-
-envsubst '${SLSKD_BASE_URL}' \
-    < /etc/nginx/templates/default.conf.template \
-    > /etc/nginx/conf.d/default.conf
-
 echo "[slskdquestrr] nginx ready — starting"
-exec nginx -g 'daemon off;'
-SCRIPT
 
-chmod +x entrypoint.sh
+# ── hand off to nginx ──
+exec nginx -g "daemon off;"
