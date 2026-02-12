@@ -90,8 +90,6 @@
                 transform    var(--speed) var(--ease);
             will-change: transform;
         }
-        .card:nth-of-type(1) { animation-delay: .06s; }
-        .card:nth-of-type(2) { animation-delay: .14s; }
         .card:hover {
             border-color: var(--bg3);
             box-shadow: var(--shadow-hover);
@@ -232,7 +230,7 @@
         }
         .empty { text-align: center; color: var(--bg3); font-style: italic; padding: 18px 10px !important; }
 
-        /* ── retry notifications ────────────────────── */
+        /* ── retry notifications ── */
         .retry-bar {
             background: var(--bg2);
             border-radius: 8px;
@@ -267,7 +265,7 @@
             box-shadow: 0 3px 10px rgba(214,93,14,.3);
         }
 
-        /* ── cat filter button ─────────────────────── */
+        /* ── cat filter button ── */
         .dl-head {
             display: flex;
             align-items: center;
@@ -295,11 +293,9 @@
             background: rgba(214,93,14,.15);
             border-color: var(--orange-d);
         }
-        .cat-btn.on:hover {
-            color: var(--yellow);
-        }
+        .cat-btn.on:hover { color: var(--yellow); }
 
-        /* ── pagination ────────────────────────────── */
+        /* ── pagination ── */
         .pager {
             display: flex;
             justify-content: center;
@@ -317,21 +313,34 @@
             cursor: pointer;
             transition: all .15s var(--ease);
         }
-        .pg-btn:hover:not(:disabled) {
-            background: var(--bg3);
-            color: var(--fg);
-        }
+        .pg-btn:hover:not(:disabled) { background: var(--bg3); color: var(--fg); }
         .pg-btn:disabled { opacity: .2; cursor: default; }
-        .pg-info {
-            font-size: .62rem;
-            color: var(--fg3);
-            min-width: 50px;
-            text-align: center;
-        }
-        .pg-note {
-            font-size: .58rem;
+        .pg-info { font-size: .62rem; color: var(--fg3); min-width: 50px; text-align: center; }
+        .pg-note { font-size: .58rem; color: var(--bg4); margin-left: 6px; }
+
+        /* ── auth ── */
+        .auth-card { max-width: 380px; }
+        .logout-btn {
+            position: absolute;
+            top: 28px;
+            right: 28px;
+            font: 500 .6rem var(--font);
             color: var(--bg4);
-            margin-left: 6px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 4px;
+            letter-spacing: .3px;
+            transition: all .2s var(--ease);
+        }
+        .logout-btn:hover { color: var(--red); background: rgba(251,73,52,.08); }
+
+        #app {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
         }
 
         @media (max-width:520px) {
@@ -340,31 +349,45 @@
             td,th { padding: 5px 6px; font-size: .64rem; }
             td { max-width: 110px; }
             .retry-bar { flex-direction: column; align-items: flex-start; gap: 6px; }
+            .logout-btn { top: 10px; right: 10px; }
         }
     </style>
 </head>
 <body>
 
 <h1 class="title"> 𓅪 slskdquestrr </h1>
+<button id="logoutBtn" class="logout-btn" onclick="logout()" style="display:none">logout</button>
+
+<!-- ═══ LOGIN ════════════════════════════════════════════════════ -->
+<div id="auth" class="card auth-card" style="display:none">
+    <div class="card-label">log in to slskd</div>
+    <input class="inp" type="text" id="user" placeholder="username"
+           autocomplete="username"
+           onkeydown="if(event.key==='Enter')document.getElementById('pass').focus()">
+    <input class="inp" type="password" id="pass" placeholder="password"
+           autocomplete="current-password"
+           onkeydown="if(event.key==='Enter')login()">
+    <button class="btn" id="loginBtn" onclick="login()">log in</button>
+    <div id="authMsg" style="margin-top:12px;min-height:18px;font-size:.72rem"></div>
+</div>
+
+<!-- ═══ APP ═════════════════════════════════════════════════════ -->
+<div id="app" style="display:none">
 
 <div class="card">
     <div class="card-label">search & download</div>
-
     <div class="toggle">
         <button class="tog on" onclick="setMode('album',this)">⊞ album</button>
         <button class="tog"    onclick="setMode('track',this)">♫ track</button>
     </div>
-
     <div class="hint" id="hint">
         downloads a complete album folder in the best available quality (prefers FLAC).<br>
         try: <strong>pink floyd dark side of the moon</strong> · <strong>daft punk discovery</strong>
     </div>
-
     <input class="inp" type="text" id="q"
            placeholder="artist album..."
            autocomplete="off"
            onkeydown="if(event.key==='Enter')go()">
-
     <button class="btn" id="goBtn" onclick="go()">search & download</button>
     <div id="status"><span class="st s-mute">ready.</span></div>
 </div>
@@ -384,6 +407,8 @@
     <div id="retries"></div>
 </div>
 
+</div><!-- /app -->
+
 <!-- ═══════════════════════════════════════════════════════════════ -->
 <script src="/config.js"></script>
 <script>
@@ -391,23 +416,12 @@
    ║  CONFIG                                                          ║
    ╚═══════════════════════════════════════════════════════════════════╝ */
 const CFG = {
-
-    // ─── Connection ─────────────────────────────────────────────────
-    API_KEY     : (window.SLSKD_CONFIG && window.SLSKD_CONFIG.API_KEY)  || '',
     API_BASE    : (window.SLSKD_CONFIG && window.SLSKD_CONFIG.API_BASE) || '/api/v0',
-
-    // ─── Search Timing ──────────────────────────────────────────────
     POLLS       : 24,
     DELAY       : 2500,
-
-    // ─── Album Rules ────────────────────────────────────────────────
     MIN_TRACKS  : 4,
     REL_GATE    : 0.45,
-
-    // ─── Quality ────────────────────────────────────────────────────
     MIN_KBPS    : 128,
-
-    // ─── Scoring Weights ────────────────────────────────────────────
     W_REL       : 200,
     W_FLAC      : 100,
     W_320       : 65,
@@ -420,8 +434,6 @@ const CFG = {
     W_Q_PEN     : 0.4,
     W_Q_CAP     : 25,
     W_NOISE     : 90,
-
-    // ─── Early-Exit Thresholds ──────────────────────────────────────
     ALBUM_EXIT_REL   : 0.75,
     ALBUM_EXIT_SCORE : 280,
     ALBUM_EXIT_FILES : 6,
@@ -429,36 +441,130 @@ const CFG = {
     TRACK_EXIT_REL   : 0.7,
     TRACK_EXIT_SCORE : 240,
     TRACK_EXIT_POLL  : 4,
-
-    // ─── Instant Retry — reject / immediate failures ────────────────
     RETRY       : 5,
     RETRY_MS    : 12000,
     RETRY_POLL  : 1500,
-
-    // ─── Background Watcher — timeout / delayed failures ────────────
     WATCH_GRACE : 90000,
     WATCH_MAX   : 3,
     WATCH_POLL  : 10000,
-
-    // ─── Download Monitor ───────────────────────────────────────────
     MON_MS      : 2500,
     PER_PAGE    : 15
 };
-/* ═══════════════════════════════════════════════════════════════════ */
 
-
-/* ── constants & state ──────────────────────────────────────────── */
+/* ── constants & state ── */
 const AUDIO = /\.(flac|mp3|ogg|opus|m4a|aac|wav|wma|alac|ape|wv)$/i;
 const NOISE = /\b(cover|covers|covered|remix|remixed|remixes|bootleg|tribute|karaoke|mashup|8[- ]?bit)\b/i;
-const STOPS = new Set(
-    'a an the and or for but not of to in on at by is it its this that with from as so if'.split(' ')
-);
+const STOPS = new Set('a an the and or for but not of to in on at by is it its this that with from as so if'.split(' '));
 
 let mode        = 'album';
-let showActive  = false;   // cat filter state
-let dlPage      = 1;       // current table page
+let showActive  = false;
+let dlPage      = 1;
+let monTimer    = null;
 const watchlist = new Map();
 let lastWatch   = 0;
+
+
+/* ══════════════════ AUTH ══════════════════════════════════════ */
+
+function tokenExpired(t) {
+    try {
+        const { exp } = JSON.parse(atob(t.split('.')[1]));
+        return exp ? exp * 1000 < Date.now() : false;
+    } catch { return true; }
+}
+
+async function apiFetch(url, opts = {}) {
+    const token = localStorage.getItem('slskd_token');
+    if (!token) { showLogin(); throw new Error('not authenticated'); }
+    opts.headers = { 'Authorization': `Bearer ${token}`, ...(opts.headers || {}) };
+    const r = await fetch(url, opts);
+    if (r.status === 401) {
+        localStorage.removeItem('slskd_token');
+        showLogin();
+        throw new Error('session expired — please log in again');
+    }
+    return r;
+}
+
+function showLogin() {
+    document.getElementById('auth').style.display = '';
+    document.getElementById('app').style.display = 'none';
+    document.getElementById('logoutBtn').style.display = 'none';
+    if (monTimer) { clearInterval(monTimer); monTimer = null; }
+    setTimeout(() => document.getElementById('user')?.focus(), 100);
+}
+
+function showApp() {
+    document.getElementById('auth').style.display = 'none';
+    document.getElementById('app').style.display = '';
+    document.getElementById('logoutBtn').style.display = '';
+    if (!monTimer) monTimer = setInterval(mon, CFG.MON_MS);
+    mon();
+}
+
+async function login() {
+    const userInp = document.getElementById('user');
+    const passInp = document.getElementById('pass');
+    const msgEl   = document.getElementById('authMsg');
+    const btn     = document.getElementById('loginBtn');
+
+    const username = userInp.value.trim();
+    const password = passInp.value;
+
+    if (!username || !password) {
+        msgEl.innerHTML = '<span class="s-err">enter username and password</span>';
+        return;
+    }
+
+    btn.disabled = true;
+    msgEl.innerHTML = '<span class="s-load">logging in…</span>';
+
+    try {
+        const r = await fetch(`${CFG.API_BASE}/session`, {
+            method : 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body   : JSON.stringify({ username, password })
+        });
+
+        if (r.ok) {
+            const data = await r.json();
+            if (data.token) {
+                localStorage.setItem('slskd_token', data.token);
+                passInp.value = '';
+                msgEl.innerHTML = '';
+                showApp();
+                return;
+            }
+        }
+
+        msgEl.innerHTML = (r.status === 401 || r.status === 403)
+            ? '<span class="s-err">invalid username or password</span>'
+            : `<span class="s-err">login failed (${r.status})</span>`;
+    } catch {
+        msgEl.innerHTML = '<span class="s-err">cannot reach slskd — is it running?</span>';
+    } finally {
+        btn.disabled = false;
+    }
+}
+
+function logout() {
+    localStorage.removeItem('slskd_token');
+    showLogin();
+}
+
+async function init() {
+    const token = localStorage.getItem('slskd_token');
+    if (token && !tokenExpired(token)) {
+        try {
+            const r = await fetch(`${CFG.API_BASE}/session`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (r.ok) { showApp(); return; }
+        } catch { /* slskd unreachable — fall through to login */ }
+    }
+    localStorage.removeItem('slskd_token');
+    showLogin();
+}
 
 
 /* ══════════════════ UI HELPERS ═════════════════════════════════ */
@@ -482,24 +588,14 @@ function setMode(m, el) {
     }
 }
 
-function stat(html) {
-    document.getElementById('status').innerHTML = `<span class="st">${html}</span>`;
-}
-
+function stat(html) { document.getElementById('status').innerHTML = `<span class="st">${html}</span>`; }
 function tail(p) { return p.split('\\').pop(); }
 function esc(s) { return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]); }
-
-function toggleFilter() {
-    showActive = !showActive;
-    document.querySelector('.cat-btn').classList.toggle('on', showActive);
-    dlPage = 1;
-    mon();
-}
-
+function toggleFilter() { showActive = !showActive; document.querySelector('.cat-btn').classList.toggle('on', showActive); dlPage = 1; mon(); }
 function dlPg(d) { dlPage += d; mon(); }
 
 
-/* ══════════════════ QUERY + SCORING ═══════════════════════════ */
+/* ══════════════════ SCORING ═══════════════════════════════════ */
 
 function clean(s) {
     return s.normalize('NFKD').replace(/[\u0300-\u036f]/g, '')
@@ -507,37 +603,19 @@ function clean(s) {
         .replace(/\s*[-–—/|]+\s*/g, ' ')
         .replace(/\s+/g, ' ').trim();
 }
-
-function sigWords(q) {
-    return q.toLowerCase().split(/\s+/).filter(w => w.length > 1 && !STOPS.has(w));
-}
-
-function relScore(text, ws) {
-    if (!ws.length) return 0;
-    const t = text.toLowerCase();
-    let h = 0;
-    for (const w of ws) if (t.includes(w)) h++;
-    return h / ws.length;
-}
-
+function sigWords(q) { return q.toLowerCase().split(/\s+/).filter(w => w.length > 1 && !STOPS.has(w)); }
+function relScore(text, ws) { if (!ws.length) return 0; const t = text.toLowerCase(); let h = 0; for (const w of ws) if (t.includes(w)) h++; return h / ws.length; }
 function qualPts(files) {
     const n = files.length; if (!n) return CFG.W_LOW;
     const fl = files.filter(f => /\.flac$/i.test(f.filename)).length;
     if (fl / n >= 0.75) return CFG.W_FLAC;
     const avg = files.reduce((s, f) => s + (f.bitRate || 0), 0) / n;
-    if (avg >= 320) return CFG.W_320;
-    if (avg >= 256) return CFG.W_256;
-    if (avg >= 192) return CFG.W_192;
-    return CFG.W_LOW;
+    if (avg >= 320) return CFG.W_320; if (avg >= 256) return CFG.W_256; if (avg >= 192) return CFG.W_192; return CFG.W_LOW;
 }
-
-function isLowQuality(f) {
-    if (/\.flac$/i.test(f.filename)) return false;
-    return (f.bitRate || 9999) < CFG.MIN_KBPS;
-}
+function isLowQuality(f) { if (/\.flac$/i.test(f.filename)) return false; return (f.bitRate || 9999) < CFG.MIN_KBPS; }
 
 
-/* ══════════════════ RANKING (returns top-N arrays) ════════════ */
+/* ══════════════════ RANKING ══════════════════════════════════ */
 
 function rankAlbums(responses, ws) {
     const dirs = [];
@@ -545,41 +623,21 @@ function rankAlbums(responses, ws) {
         const map = {};
         for (const f of (r.files || [])) {
             if (!AUDIO.test(f.filename) || isLowQuality(f)) continue;
-            const parts = f.filename.split('\\');
-            parts.pop();
+            const parts = f.filename.split('\\'); parts.pop();
             const key = r.username + '|' + parts.join('\\');
-            if (!map[key]) {
-                map[key] = {
-                    username : r.username,
-                    directory: parts.join('\\'),
-                    dirName  : parts[parts.length - 1] || '?',
-                    files    : [],
-                    queueLen : r.queueLength        || 0,
-                    freeSlot : r.hasFreeUploadSlot   || false
-                };
-            }
+            if (!map[key]) map[key] = { username: r.username, directory: parts.join('\\'), dirName: parts[parts.length-1]||'?', files: [], queueLen: r.queueLength||0, freeSlot: r.hasFreeUploadSlot||false };
             map[key].files.push(f);
         }
-        for (const d of Object.values(map))
-            if (d.files.length >= CFG.MIN_TRACKS) dirs.push(d);
+        for (const d of Object.values(map)) if (d.files.length >= CFG.MIN_TRACKS) dirs.push(d);
     }
     for (const d of dirs) {
-        const rv = relScore(d.directory, ws);
-        d.relevance = rv;
-        let s  = rv * CFG.W_REL;
-        s += qualPts(d.files);
-        s += Math.min(d.files.length * CFG.W_TRACK, CFG.W_TRACK_CAP);
-        if (d.freeSlot) s += CFG.W_SLOT;
-        s -= Math.min(d.queueLen * CFG.W_Q_PEN, CFG.W_Q_CAP);
-        if (NOISE.test(d.directory)) s -= CFG.W_NOISE;
-        d.score = s;
+        const rv = relScore(d.directory, ws); d.relevance = rv;
+        let s = rv * CFG.W_REL; s += qualPts(d.files); s += Math.min(d.files.length * CFG.W_TRACK, CFG.W_TRACK_CAP);
+        if (d.freeSlot) s += CFG.W_SLOT; s -= Math.min(d.queueLen * CFG.W_Q_PEN, CFG.W_Q_CAP);
+        if (NOISE.test(d.directory)) s -= CFG.W_NOISE; d.score = s;
     }
-    let pool = dirs.filter(d => d.relevance >= CFG.REL_GATE);
-    if (!pool.length) pool = dirs;
-    pool.sort((a, b) => {
-        if (b.score !== a.score) return b.score - a.score;
-        return a.queueLen - b.queueLen;
-    });
+    let pool = dirs.filter(d => d.relevance >= CFG.REL_GATE); if (!pool.length) pool = dirs;
+    pool.sort((a, b) => b.score !== a.score ? b.score - a.score : a.queueLen - b.queueLen);
     return pool.slice(0, CFG.RETRY);
 }
 
@@ -588,95 +646,65 @@ function rankTracks(responses, ws) {
     for (const r of responses) {
         for (const f of (r.files || [])) {
             if (!AUDIO.test(f.filename) || isLowQuality(f)) continue;
-            const rv = relScore(f.filename, ws);
-            if (rv < CFG.REL_GATE) continue;
-            const isFl = /\.flac$/i.test(f.filename);
-            let qs;
-            if (isFl)                       qs = CFG.W_FLAC;
-            else if ((f.bitRate||0) >= 320) qs = CFG.W_320;
-            else if ((f.bitRate||0) >= 256) qs = CFG.W_256;
-            else if ((f.bitRate||0) >= 192) qs = CFG.W_192;
-            else                            qs = CFG.W_LOW;
-            let s = rv * CFG.W_REL + qs;
-            if (r.hasFreeUploadSlot) s += CFG.W_SLOT;
-            s -= Math.min((r.queueLength||0) * CFG.W_Q_PEN, CFG.W_Q_CAP);
-            if (NOISE.test(f.filename)) s -= CFG.W_NOISE;
-            pool.push({
-                username: r.username, file: f,
-                score: s, relevance: rv,
-                queue: r.queueLength||0,
-                freeSlot: r.hasFreeUploadSlot||false
-            });
+            const rv = relScore(f.filename, ws); if (rv < CFG.REL_GATE) continue;
+            let qs; if (/\.flac$/i.test(f.filename)) qs = CFG.W_FLAC;
+            else if ((f.bitRate||0)>=320) qs=CFG.W_320; else if ((f.bitRate||0)>=256) qs=CFG.W_256;
+            else if ((f.bitRate||0)>=192) qs=CFG.W_192; else qs=CFG.W_LOW;
+            let s = rv*CFG.W_REL+qs; if (r.hasFreeUploadSlot) s+=CFG.W_SLOT;
+            s -= Math.min((r.queueLength||0)*CFG.W_Q_PEN, CFG.W_Q_CAP);
+            if (NOISE.test(f.filename)) s-=CFG.W_NOISE;
+            pool.push({ username:r.username, file:f, score:s, relevance:rv, queue:r.queueLength||0, freeSlot:r.hasFreeUploadSlot||false });
         }
     }
-    pool.sort((a, b) => b.score - a.score);
-    return pool.slice(0, CFG.RETRY);
+    pool.sort((a,b) => b.score-a.score); return pool.slice(0, CFG.RETRY);
 }
 
 
 /* ══════════════════ DOWNLOAD HELPERS ══════════════════════════ */
 
-async function jf(r) {
-    if (r.status === 404 || r.status === 204) return null;
-    const t = await r.text();
-    try { return t ? JSON.parse(t) : null; } catch { return null; }
-}
+async function jf(r) { if (r.status===404||r.status===204) return null; const t=await r.text(); try{return t?JSON.parse(t):null}catch{return null} }
 
 function prepPick(pick) {
     const isAlb = Array.isArray(pick.files) && pick.files.length > 1 && !pick.file;
-    const user  = pick.username;
-    let files, label;
+    const user = pick.username; let files, label;
     if (isAlb) {
         files = pick.files.map(f => ({ filename: f.filename, size: f.size }));
         const fl = pick.files.filter(f => /\.flac$/i.test(f.filename)).length;
-        const qt = fl >= pick.files.length * .75 ? 'FLAC' : `${pick.files.length} files`;
-        label = `📂 ${pick.dirName} · ${fl ? fl + ' FLAC' : qt} · ${user}`;
+        const qt = fl >= pick.files.length*.75 ? 'FLAC' : `${pick.files.length} files`;
+        label = `📂 ${pick.dirName} · ${fl ? fl+' FLAC' : qt} · ${user}`;
     } else {
         const f = pick.file || (pick.files && pick.files[0]);
-        files = [{ filename: f.filename, size: f.size }];
-        label = `♫ ${tail(f.filename)} · ${user}`;
+        files = [{ filename: f.filename, size: f.size }]; label = `♫ ${tail(f.filename)} · ${user}`;
     }
     return { user, files, label };
 }
 
 function collectFiles(ue) {
     const all = [];
-    for (const dir of (ue.directories || []))
-        for (const f of (dir.files || [])) all.push(f);
-    if (!ue.directories && ue.files)
-        for (const f of ue.files) all.push(f);
+    for (const dir of (ue.directories||[])) for (const f of (dir.files||[])) all.push(f);
+    if (!ue.directories && ue.files) for (const f of ue.files) all.push(f);
     return all;
 }
 
 async function dlState(user, filenames) {
     try {
-        const r = await fetch(`${CFG.API_BASE}/transfers/downloads`,
-                              { headers: { 'X-API-Key': CFG.API_KEY } });
-        const data = await jf(r);
-        if (!Array.isArray(data)) return 'pending';
-        const ue = data.find(u => u.username === user);
-        if (!ue) return 'pending';
-        const all  = collectFiles(ue);
+        const r = await apiFetch(`${CFG.API_BASE}/transfers/downloads`);
+        const data = await jf(r); if (!Array.isArray(data)) return 'pending';
+        const ue = data.find(u => u.username === user); if (!ue) return 'pending';
+        const all = collectFiles(ue);
         const want = new Set(filenames.map(n => n.toLowerCase()));
         const matched = all.filter(f => f.filename && want.has(f.filename.toLowerCase()));
         if (!matched.length) return 'pending';
-
-        let ok = 0, prog = 0, rej = 0, tout = 0, err = 0;
-        for (const f of matched) {
-            const st = f.state || '';
-            if      (/Succeed/i.test(st))            ok++;
-            else if (/Progress|Initializ/i.test(st)) prog++;
-            else if (/Reject/i.test(st))             rej++;
-            else if (/Timed|Timeout/i.test(st))      tout++;
-            else if (/Error|Fail|Abort/i.test(st))   err++;
+        let ok=0,prog=0,rej=0,tout=0,err=0;
+        for (const f of matched) { const st=f.state||'';
+            if (/Succeed/i.test(st)) ok++; else if (/Progress|Initializ/i.test(st)) prog++;
+            else if (/Reject/i.test(st)) rej++; else if (/Timed|Timeout/i.test(st)) tout++;
+            else if (/Error|Fail|Abort/i.test(st)) err++;
         }
-        if (prog > 0) return 'progressing';
-        if (ok === matched.length) return 'completed';
-        if (rej  > 0) return 'rejected';
-        if (tout > 0) return 'timedout';
-        if (err  > 0) return 'errored';
+        if (prog>0) return 'progressing'; if (ok===matched.length) return 'completed';
+        if (rej>0) return 'rejected'; if (tout>0) return 'timedout'; if (err>0) return 'errored';
         return 'pending';
-    } catch { return 'pending'; }
+    } catch (e) { if (e.message.includes('session')) throw e; return 'pending'; }
 }
 
 async function awaitDl(user, filenames) {
@@ -684,8 +712,8 @@ async function awaitDl(user, filenames) {
     await new Promise(ok => setTimeout(ok, CFG.RETRY_POLL));
     while (Date.now() < deadline) {
         const s = await dlState(user, filenames);
-        if (s === 'rejected' || s === 'timedout' || s === 'errored') return 'failed';
-        if (s === 'progressing' || s === 'completed') return 'ok';
+        if (s==='rejected'||s==='timedout'||s==='errored') return 'failed';
+        if (s==='progressing'||s==='completed') return 'ok';
         await new Promise(ok => setTimeout(ok, CFG.RETRY_POLL));
     }
     return 'ok';
@@ -699,167 +727,93 @@ async function watchJobs() {
         if (job.exhausted || job.retrying) continue;
         const grace = job.retries === 0 ? CFG.WATCH_GRACE : CFG.RETRY_MS * 2;
         if (Date.now() - job.queuedAt < grace) continue;
-
-        const state = await dlState(job.user, job.filenames);
+        let state;
+        try { state = await dlState(job.user, job.filenames); }
+        catch (e) { if (e.message.includes('session')) return; continue; }
         if (state === 'completed') { watchlist.delete(id); continue; }
         if (state === 'progressing' || state === 'pending') continue;
-
         const next = job.attempt + 1;
         if (next < job.candidates.length && job.retries < CFG.WATCH_MAX) {
             job.retrying = true;
             try {
                 const { user, files, label } = prepPick(job.candidates[next]);
-                const dr = await fetch(
-                    `${CFG.API_BASE}/transfers/downloads/${encodeURIComponent(user)}`, {
-                        method : 'POST',
-                        headers: { 'X-API-Key': CFG.API_KEY, 'Content-Type': 'application/json' },
-                        body   : JSON.stringify(files)
-                    });
-                if (dr.ok || dr.status === 201) {
-                    job.attempt   = next;
-                    job.user      = user;
-                    job.filenames = files.map(f => f.filename);
-                    job.label     = label;
-                    job.queuedAt  = Date.now();
-                    job.retries++;
-                } else {
-                    job.attempt = next;
-                }
-            } catch (e) { console.error('[watch] retry error', e); }
+                const dr = await apiFetch(`${CFG.API_BASE}/transfers/downloads/${encodeURIComponent(user)}`, {
+                    method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(files)
+                });
+                if (dr.ok||dr.status===201) { job.attempt=next; job.user=user; job.filenames=files.map(f=>f.filename); job.label=label; job.queuedAt=Date.now(); job.retries++; }
+                else job.attempt=next;
+            } catch (e) { if (e.message.includes('session')) return; console.error('[watch]', e); }
             job.retrying = false;
-        } else {
-            job.exhausted = true;
-        }
+        } else job.exhausted = true;
     }
     const stale = Date.now() - 7200000;
-    for (const [id, job] of watchlist) {
-        if (job.queuedAt < stale) watchlist.delete(id);
-    }
+    for (const [id, job] of watchlist) if (job.queuedAt < stale) watchlist.delete(id);
 }
 
 function updateRetryArea() {
-    const el = document.getElementById('retries');
-    if (!el) return;
+    const el = document.getElementById('retries'); if (!el) return;
     const bars = [];
     for (const [id, job] of watchlist) {
-        if (job.retrying) {
-            bars.push(`<div class="retry-bar">
-                <span><span class="s-load">↻</span> retrying
-                    <span class="query">"${esc(job.query)}"</span>
-                    <span class="src">from ${esc(job.user)} · source ${job.attempt + 1}/${job.candidates.length}</span>
-                </span>
-            </div>`);
-        } else if (job.exhausted) {
-            bars.push(`<div class="retry-bar">
-                <span><span class="s-err">✗</span>
-                    <span class="query">"${esc(job.query)}"</span>
-                    — all ${job.candidates.length} sources failed
-                </span>
-                <button class="retry-btn" onclick="manualRetry('${id}')">↻ retry search</button>
-            </div>`);
-        }
+        if (job.retrying) bars.push(`<div class="retry-bar"><span><span class="s-load">↻</span> retrying <span class="query">"${esc(job.query)}"</span> <span class="src">from ${esc(job.user)} · source ${job.attempt+1}/${job.candidates.length}</span></span></div>`);
+        else if (job.exhausted) bars.push(`<div class="retry-bar"><span><span class="s-err">✗</span> <span class="query">"${esc(job.query)}"</span> — all ${job.candidates.length} sources failed</span><button class="retry-btn" onclick="manualRetry('${id}')">↻ retry search</button></div>`);
     }
     el.innerHTML = bars.join('');
 }
 
 function manualRetry(id) {
-    const job = watchlist.get(id);
-    if (!job) return;
+    const job = watchlist.get(id); if (!job) return;
     document.getElementById('q').value = job.query;
-    if (mode !== job.mode) {
-        const btns = document.querySelectorAll('.tog');
-        setMode(job.mode, job.mode === 'album' ? btns[0] : btns[1]);
-    }
-    watchlist.delete(id);
-    go();
+    if (mode !== job.mode) { const btns = document.querySelectorAll('.tog'); setMode(job.mode, job.mode==='album'?btns[0]:btns[1]); }
+    watchlist.delete(id); go();
 }
 
 
-/* ══════════════════ DOWNLOAD MONITOR (table) ══════════════════ */
-
-setInterval(mon, CFG.MON_MS);
+/* ══════════════════ DOWNLOAD MONITOR ══════════════════════════ */
 
 async function mon() {
     try {
-        const r  = await fetch(`${CFG.API_BASE}/transfers/downloads`,
-                               { headers: { 'X-API-Key': CFG.API_KEY } });
+        const r  = await apiFetch(`${CFG.API_BASE}/transfers/downloads`);
         const d  = await jf(r);
         const tb = document.getElementById('dl');
         const pg = document.getElementById('pager');
         const rows = [];
 
-        if (Array.isArray(d)) for (const u of d) {
-            const all = collectFiles(u);
-            for (const f of all) rows.push({ user: u.username, f });
-        }
+        if (Array.isArray(d)) for (const u of d) { const all = collectFiles(u); for (const f of all) rows.push({ user: u.username, f }); }
 
-        /* ── filter ────────────────────────────────────────── */
         let visible = rows;
-        if (showActive) {
-            visible = rows.filter(({ f }) =>
-                /Queue|Request|Initializ|Progress/i.test(f.state || '') || !(f.state || '')
-            );
-        }
+        if (showActive) visible = rows.filter(({ f }) => /Queue|Request|Initializ|Progress/i.test(f.state||'') || !(f.state||''));
 
-        /* ── cat button tooltip ────────────────────────────── */
         const catBtn = document.querySelector('.cat-btn');
-        if (catBtn) {
-            const h = rows.length - visible.length;
-            catBtn.title = showActive
-                ? `showing active only (${h} hidden) — click to show all`
-                : 'hide completed — show active only';
-        }
+        if (catBtn) { const h = rows.length - visible.length; catBtn.title = showActive ? `showing active (${h} hidden) — click to show all` : 'hide completed — show active only'; }
 
-        /* ── empty states ──────────────────────────────────── */
         if (!visible.length && rows.length && showActive) {
-            tb.innerHTML = '<tr><td colspan="4" class="empty">all downloads filtered — click 𓃠 to show</td></tr>';
-            pg.innerHTML = '';
+            tb.innerHTML = '<tr><td colspan="4" class="empty">all downloads filtered — click 𓃠 to show</td></tr>'; pg.innerHTML = '';
         } else if (!visible.length) {
-            tb.innerHTML = '<tr><td colspan="4" class="empty">nothing yet.</td></tr>';
-            pg.innerHTML = '';
+            tb.innerHTML = '<tr><td colspan="4" class="empty">nothing yet.</td></tr>'; pg.innerHTML = '';
         } else {
-
-            /* ── paginate ──────────────────────────────────── */
             const pages = Math.ceil(visible.length / CFG.PER_PAGE);
             dlPage = Math.max(1, Math.min(dlPage, pages));
-            const start = (dlPage - 1) * CFG.PER_PAGE;
-            const slice = visible.slice(start, start + CFG.PER_PAGE);
+            const start = (dlPage-1)*CFG.PER_PAGE;
+            const slice = visible.slice(start, start+CFG.PER_PAGE);
 
             tb.innerHTML = slice.map(({ user, f }) => {
-                const p  = f.percentComplete != null
-                         ? f.percentComplete.toFixed(1)
-                         : f.size > 0 ? ((f.bytesTransferred||0)/f.size*100).toFixed(1) : '0.0';
-                const st = f.state || '…';
-                const c  = /complet.*succeed|succeed/i.test(st) ? 's-ok'
-                         : /error|fail|abort|cancel|timed|reject/i.test(st) ? 's-err' : '';
-                return `<tr>
-                    <td title="${esc(f.filename)}">${esc(tail(f.filename))}</td>
-                    <td>${esc(user)}</td>
-                    <td><div class="bar-bg"><div class="bar-fg" style="width:${p}%"></div></div>${p}%</td>
-                    <td class="${c}">${esc(st)}</td></tr>`;
+                const p = f.percentComplete!=null ? f.percentComplete.toFixed(1) : f.size>0 ? ((f.bytesTransferred||0)/f.size*100).toFixed(1) : '0.0';
+                const st = f.state||'…';
+                const c = /complet.*succeed|succeed/i.test(st)?'s-ok':/error|fail|abort|cancel|timed|reject/i.test(st)?'s-err':'';
+                return `<tr><td title="${esc(f.filename)}">${esc(tail(f.filename))}</td><td>${esc(user)}</td><td><div class="bar-bg"><div class="bar-fg" style="width:${p}%"></div></div>${p}%</td><td class="${c}">${esc(st)}</td></tr>`;
             }).join('');
 
-            /* ── pager controls ────────────────────────────── */
-            if (pages > 1) {
-                const note = showActive ? '' : `<span class="pg-note">${visible.length} total</span>`;
-                pg.innerHTML =
-                    `<button class="pg-btn" onclick="dlPg(-1)" ${dlPage<=1?'disabled':''}>◂</button>` +
-                    `<span class="pg-info">${dlPage} / ${pages}</span>` +
-                    `<button class="pg-btn" onclick="dlPg(1)" ${dlPage>=pages?'disabled':''}>▸</button>` +
-                    note;
-            } else {
-                pg.innerHTML = '';
-            }
+            pg.innerHTML = pages > 1
+                ? `<button class="pg-btn" onclick="dlPg(-1)" ${dlPage<=1?'disabled':''}>◂</button><span class="pg-info">${dlPage} / ${pages}</span><button class="pg-btn" onclick="dlPg(1)" ${dlPage>=pages?'disabled':''}>▸</button><span class="pg-note">${visible.length} total</span>`
+                : '';
         }
 
-        /* ── background watcher ────────────────────────────── */
-        if (watchlist.size > 0 && Date.now() - lastWatch >= CFG.WATCH_POLL) {
-            lastWatch = Date.now();
-            await watchJobs();
-        }
+        if (watchlist.size > 0 && Date.now() - lastWatch >= CFG.WATCH_POLL) { lastWatch = Date.now(); await watchJobs(); }
         updateRetryArea();
-
-    } catch (e) { console.error('mon', e); }
+    } catch (e) {
+        if (e.message.includes('session') || e.message.includes('not authenticated')) return;
+        console.error('mon', e);
+    }
 }
 
 
@@ -868,128 +822,75 @@ async function mon() {
 async function go() {
     const raw = document.getElementById('q').value;
     if (!raw.trim()) return;
-
-    const q   = clean(raw);
-    const ws  = sigWords(q);
+    const q = clean(raw), ws = sigWords(q);
     const btn = document.getElementById('goBtn');
     btn.disabled = true;
     stat(`<span class="s-load">searching "${esc(q)}" …</span>`);
 
     try {
-        const sr = await fetch(`${CFG.API_BASE}/searches`, {
-            method: 'POST',
-            headers: { 'X-API-Key': CFG.API_KEY, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ searchText: q })
+        const sr = await apiFetch(`${CFG.API_BASE}/searches`, {
+            method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ searchText: q })
         });
         if (!sr.ok) throw new Error(`search create failed (${sr.status})`);
-        const sd = await jf(sr);
-        if (!sd?.id) throw new Error('no search id returned');
+        const sd = await jf(sr); if (!sd?.id) throw new Error('no search id returned');
         const sid = sd.id;
 
         let candidates = [], sources = 0, lastRes = [];
-
         for (let i = 0; i < CFG.POLLS; i++) {
             stat(`<span class="s-load">poll ${i+1}/${CFG.POLLS} · ${sources} sources</span>`);
             await new Promise(ok => setTimeout(ok, CFG.DELAY));
-
-            const rr = await fetch(`${CFG.API_BASE}/searches/${sid}/responses`,
-                                   { headers: { 'X-API-Key': CFG.API_KEY } });
-            const rd = await jf(rr);
-            if (!rd) continue;
-
-            const res = Array.isArray(rd) ? rd
-                      : Array.isArray(rd.responses) ? rd.responses : [];
-            sources = res.length;
-            if (!sources) continue;
-            lastRes = res;
-
-            candidates = mode === 'album' ? rankAlbums(res, ws) : rankTracks(res, ws);
+            const rr = await apiFetch(`${CFG.API_BASE}/searches/${sid}/responses`);
+            const rd = await jf(rr); if (!rd) continue;
+            const res = Array.isArray(rd)?rd:Array.isArray(rd.responses)?rd.responses:[];
+            sources = res.length; if (!sources) continue; lastRes = res;
+            candidates = mode==='album' ? rankAlbums(res,ws) : rankTracks(res,ws);
             const best = candidates[0];
-
-            if (best && mode === 'album'
-                && best.relevance >= CFG.ALBUM_EXIT_REL
-                && best.score     >= CFG.ALBUM_EXIT_SCORE
-                && best.files.length >= CFG.ALBUM_EXIT_FILES
-                && i >= CFG.ALBUM_EXIT_POLL) break;
-
-            if (best && mode === 'track'
-                && best.relevance >= CFG.TRACK_EXIT_REL
-                && best.score     >= CFG.TRACK_EXIT_SCORE
-                && i >= CFG.TRACK_EXIT_POLL) break;
+            if (best && mode==='album' && best.relevance>=CFG.ALBUM_EXIT_REL && best.score>=CFG.ALBUM_EXIT_SCORE && best.files.length>=CFG.ALBUM_EXIT_FILES && i>=CFG.ALBUM_EXIT_POLL) break;
+            if (best && mode==='track' && best.relevance>=CFG.TRACK_EXIT_REL && best.score>=CFG.TRACK_EXIT_SCORE && i>=CFG.TRACK_EXIT_POLL) break;
         }
 
         let fb = null;
-        if (!candidates.length && lastRes.length) {
-            candidates = mode === 'album' ? rankTracks(lastRes, ws) : rankAlbums(lastRes, ws);
-            if (candidates.length) fb = mode === 'album' ? 'track' : 'album';
-        }
+        if (!candidates.length && lastRes.length) { candidates = mode==='album'?rankTracks(lastRes,ws):rankAlbums(lastRes,ws); if (candidates.length) fb = mode==='album'?'track':'album'; }
+        if (!candidates.length) throw new Error(`no ${mode} results across ${sources} sources — try simpler or different terms`);
 
-        if (!candidates.length) throw new Error(
-            `no ${mode} results across ${sources} sources — try simpler or different terms`
-        );
-
-        let queued  = false;
-        let lastErr = '';
-
+        let queued = false, lastErr = '';
         for (let a = 0; a < candidates.length; a++) {
             const { user, files, label } = prepPick(candidates[a]);
             const tag = candidates.length > 1 ? ` [${a+1}/${candidates.length}]` : '';
-
             stat(`<span class="s-load">queueing${tag} from ${esc(user)} …</span>`);
 
-            const dr = await fetch(
-                `${CFG.API_BASE}/transfers/downloads/${encodeURIComponent(user)}`, {
-                    method : 'POST',
-                    headers: { 'X-API-Key': CFG.API_KEY, 'Content-Type': 'application/json' },
-                    body   : JSON.stringify(files)
-                });
-
-            if (!dr.ok && dr.status !== 201) {
-                lastErr = `queue failed (${dr.status})`;
-                continue;
-            }
+            const dr = await apiFetch(`${CFG.API_BASE}/transfers/downloads/${encodeURIComponent(user)}`, {
+                method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(files)
+            });
+            if (!dr.ok && dr.status!==201) { lastErr=`queue failed (${dr.status})`; continue; }
 
             stat(`<span class="s-load">verifying${tag} …</span>`);
-            const result = await awaitDl(user, files.map(f => f.filename));
-            if (result === 'failed') {
-                lastErr = `${user} rejected / timed out`;
-                stat(`<span class="s-mute">source ${a+1} failed, trying next …</span>`);
-                continue;
-            }
+            const result = await awaitDl(user, files.map(f=>f.filename));
+            if (result==='failed') { lastErr=`${user} rejected / timed out`; stat(`<span class="s-mute">source ${a+1} failed, trying next …</span>`); continue; }
 
-            const fbNote = fb
-                ? `<br><span class="s-mute">(no ${mode} found — used ${fb} mode)</span>` : '';
-            const retryNote = a > 0
-                ? `<br><span class="s-mute">(attempt ${a+1} of ${candidates.length})</span>` : '';
+            const fbNote = fb ? `<br><span class="s-mute">(no ${mode} found — used ${fb} mode)</span>` : '';
+            const retryNote = a > 0 ? `<br><span class="s-mute">(attempt ${a+1} of ${candidates.length})</span>` : '';
             stat(`<span class="s-ok">✓ queued — ${label}</span>${fbNote}${retryNote}`);
             document.getElementById('q').value = '';
             queued = true;
 
-            /* save to watchlist */
-            const jobId = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-            watchlist.set(jobId, {
-                query: q, mode: fb || mode, ws, candidates,
-                attempt: a, user, filenames: files.map(f => f.filename),
-                label, queuedAt: Date.now(),
-                retries: 0, exhausted: false, retrying: false
-            });
+            const jobId = Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+            watchlist.set(jobId, { query:q, mode:fb||mode, ws, candidates, attempt:a, user, filenames:files.map(f=>f.filename), label, queuedAt:Date.now(), retries:0, exhausted:false, retrying:false });
             break;
         }
 
-        if (!queued) throw new Error(
-            `all ${candidates.length} sources failed (${lastErr})`
-        );
-
-        fetch(`${CFG.API_BASE}/searches/${sid}`,
-              { method: 'DELETE', headers: { 'X-API-Key': CFG.API_KEY } }).catch(() => {});
+        if (!queued) throw new Error(`all ${candidates.length} sources failed (${lastErr})`);
+        apiFetch(`${CFG.API_BASE}/searches/${sid}`, { method:'DELETE' }).catch(()=>{});
 
     } catch (e) {
-        stat(`<span class="s-err">✗ ${e.message}</span>`);
+        if (!e.message.includes('session') && !e.message.includes('not authenticated'))
+            stat(`<span class="s-err">✗ ${e.message}</span>`);
         console.error(e);
-    } finally {
-        btn.disabled = false;
-    }
+    } finally { btn.disabled = false; }
 }
+
+/* ── boot ── */
+init();
 </script>
 </body>
 </html>

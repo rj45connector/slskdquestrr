@@ -9,7 +9,6 @@ COPY entrypoint.sh               /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
 ENV SLSKD_BASE_URL=http://slskd:5030
-ENV SLSKD_API_KEY=changeme
 
 EXPOSE 80
 
