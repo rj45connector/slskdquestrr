@@ -1,10 +1,10 @@
 
 # 𓅪 slskdquestrr
 
-A sleek, self-hosted web UI for requesting music downloads through
+A self-hosted web UI for requesting music downloads through
 [slskd](https://github.com/slskd/slskd) (Soulseek).  
 Search by **album** or **track**, and slskdquestrr automatically picks
-the best-quality source (prefers FLAC) and queues the download — no
+the quality source (prefers FLAC) and queues the download. No
 need to touch the slskd interface.
 
 ![screenshot](https://img.shields.io/badge/status-stable-green)
@@ -21,8 +21,6 @@ need to touch the slskd interface.
 | 🎵 **Album & Track modes** | Full-album folders or single best-quality files |
 | 🏆 **Smart scoring**       | Ranks results by format, bitrate, relevance, queue length |
 | 🔒 **No CORS headaches**   | Built-in nginx reverse-proxy to the slskd API |
-| ⚡ **Lightweight**          | ~7 MB image (nginx:alpine) |
-| 🎨 **Gruvbox theme**       | Beautiful dark UI with JetBrains Mono |
 
 ---
 
@@ -52,10 +50,10 @@ web:
 
 | Variable | Required | Default | Description |
 |---|---|---|---|
-| `SLSKD_BASE_URL` | ✅ | `http://slskd:5030` | Internal URL of your slskd instance |
+| `SLSKD_BASE_URL` | ✅ | `http://server_ip_address:5030` | Internal URL of your slskd instance |
 | `SLSKD_API_KEY` | ✅ | `changeme` | API key for slskd authentication |
 
-> **Note:** `SLSKD_BASE_URL` should be the Docker-internal URL (no trailing slash).  
+> **Note:** `SLSKD_BASE_URL` should be the Docker-internal URL (no trailing slash) _**OR**_ the server's IP.  
 > If slskd uses `network_mode: service:gluetun`, use `http://gluetun:5030`.
 
 ---
@@ -74,7 +72,7 @@ services:
     ports:
       - "8082:80"
     environment:
-      - SLSKD_BASE_URL=http://localhost:5030      # or http://slskd:5030
+      - SLSKD_BASE_URL=http://server_ip_address:5030      # or server_ip_address, http://gluetun:5030 (If using a VPN)
       - SLSKD_API_KEY=your-api-key-here
     restart: unless-stopped
 ```
@@ -123,7 +121,7 @@ Edit `public/index.html` and adjust the `CFG` object:
 
 ### Theming
 
-All colours use CSS custom properties (Gruvbox palette).  
+All colours use CSS custom properties.  
 Edit the `:root` block in `public/index.html` to reskin.
 
 ---
@@ -141,37 +139,36 @@ curl http://localhost:8082/health
 
 MIT — do whatever you want.
 
-
 ---
 
 ## Quick Start — Build & Run
 
 ```bash
-# 1. Clone / create the repo
+# 1.) Clone & create the repo
 mkdir slskdquestrr && cd slskdquestrr
 
-# 2. Create the folder structure
+# 2.) Create the folder structure
 mkdir -p public nginx
 
 # 3. Place the files:
-#    public/index.html          ← modified HTML (above)
-#    nginx/default.conf.template ← nginx template (above)
-#    entrypoint.sh              ← startup script (above)
-#    Dockerfile                 ← Dockerfile (above)
+#    public/index.html          
+#    nginx/default.conf.template 
+#    entrypoint.sh              
+#    Dockerfile                 
 
-# 4. Make entrypoint executable
+# 4.) Make entrypoint executable
 chmod +x entrypoint.sh
 
-# 5. Build the image
+# 5.) Build the image
 docker build -t slskdquestrr:latest .
 
-# 6. Test it standalone
+# 6.) Test it standalone
 docker run --rm -p 8082:80 \
   -e SLSKD_BASE_URL=http://host.docker.internal:5030 \
   -e SLSKD_API_KEY=YourKeyHere \
   slskdquestrr:latest
 
-# 7. Open http://localhost:8082
+# 7.) Open http://localhost:8082
 ```
 ---
 ## How It All Fits Together
