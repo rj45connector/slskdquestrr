@@ -21,6 +21,7 @@ need to touch the slskd interface.
 | 🎵 **Album & Track modes** | Full-album folders or single best-quality files |
 | 🏆 **Smart scoring**       | Ranks results by format, bitrate, relevance, queue length |
 | 🔒 **No CORS headaches**   | Built-in nginx reverse-proxy to the slskd API |
+| 👤 **Easy Auth**   | Easily log in with your slskd credentials, no keys needed |
 
 ---
 
@@ -87,7 +88,7 @@ Open **http://YOUR_SERVER_IP:8082** in your browser.
 
 ---
 
-This WebUI uses slskd web UI credentials to authenticate. Please ensure you have a strong username/password conmanation if exposing these services. 
+> This WebUI uses slskd web UI credentials to authenticate. Please ensure you have a strong username/password conmanation if exposing these services. 
 
 ---
 
