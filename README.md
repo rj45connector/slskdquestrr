@@ -67,7 +67,7 @@ Add this service to your `docker-compose.yml`:
 ```yaml
 services:
   slskdquestrr:
-    image: ghcr.io/YOURUSERNAME/slskdquestrr:latest
+    image: ghcr.io/rj45connector/slskdquestrr:latest
     container_name: slskdquestrr
     ports:
       - "8082:80"
@@ -86,7 +86,7 @@ docker compose up -d slskdquestrr
 ### Option B — Build from source
 
 ```bash
-git clone https://github.com/YOURUSERNAME/slskdquestrr.git
+git clone https://github.com/rj45connector/slskdquestrr.git
 cd slskdquestrr
 
 # Edit docker-compose.yml with your SLSKD_API_KEY
