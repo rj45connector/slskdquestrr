@@ -19,9 +19,10 @@ need to touch the slskd interface.
 | | |
 |---|---|
 | 🎵 **Album & Track modes** | Full-album folders or single best-quality files |
-| 🏆 **Smart scoring**       | Ranks results by format, bitrate, relevance, queue length |
+| 🏆 **"Smart" scoring**       | Ranks results by format, bitrate, relevance, queue length |
 | 🔒 **No CORS headaches**   | Built-in nginx reverse-proxy to the slskd API |
 | 👤 **Easy Auth**   | Easily log in with your slskd credentials, no keys needed |
+| 🔁 **Timeout/Failed Handler**   | Internal process for retrying timed out/failed queries |
 
 ---
 
