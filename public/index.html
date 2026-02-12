@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>music requester</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* ╔═══════════════════════════════════════════════════╗
+           ║  THEME — edit variables to reskin everything      ║
+           ╚═══════════════════════════════════════════════════╝ */
+        :root {
+            /* ── gruvbox palette ────────────────────── */
+            --bg0h:     #1d2021;
+            --bg0:      #282828;
+            --bg1:      #3c3836;
+            --bg2:      #504945;
+            --bg3:      #665c54;
+            --bg4:      #7c6f64;
+            --fg:       #ebdbb2;
+            --fg2:      #d5c4a1;
+            --fg3:      #a89984;
+            --gray:     #928374;
+            --red:      #fb4934;
+            --green:    #b8bb26;
+            --yellow:   #fabd2f;
+            --blue:     #83a598;
+            --purple:   #d3869b;
+            --aqua:     #8ec07c;
+            --orange:   #fe8019;
+            --blue-d:   #458588;
+            --orange-d: #d65d0e;
+            --aqua-d:   #689d6a;
+
+            /* ── layout ─────────────────────────────── */
+            --radius:       10px;
+            --card-max:     660px;
+            --table-max:    840px;
+            --card-pad:     24px;
+            --card-gap:     18px;
+            --font:         'JetBrains Mono', monospace;
+            --speed:        0.25s;
+            --ease:         cubic-bezier(.4,0,.2,1);
+            --shadow-hover: 0 8px 28px rgba(0,0,0,0.4);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: var(--font);
+            background: var(--bg0h);
+            color: var(--fg);
+            padding: 28px 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ── keyframes ──────────────────────────────── */
+        @keyframes enter {
+            from { opacity: 0; transform: translateY(22px) scale(.97); }
+            to   { opacity: 1; transform: translateY(0)   scale(1); }
+        }
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(5px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes pulse {
+            0%,100% { opacity: 1; }
+            50%     { opacity: .32; }
+        }
+        @keyframes shimmer {
+            0%   { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+
+        /* ── title ──────────────────────────────────── */
+        .title {
+            color: var(--yellow);
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 24px;
+            letter-spacing: -.5px;
+            animation: enter .55s var(--ease) both;
+        }
+
+        /* ── cards ──────────────────────────────────── */
+        .card {
+            background: var(--bg1);
+            padding: var(--card-pad);
+            border-radius: var(--radius);
+            width: 100%;
+            max-width: var(--card-max);
+            border: 1px solid var(--bg2);
+            margin-bottom: var(--card-gap);
+            animation: enter .55s var(--ease) both;
+            transition:
+                border-color var(--speed) var(--ease),
+                box-shadow   var(--speed) var(--ease),
+                transform    var(--speed) var(--ease);
+            will-change: transform;
+        }
+        .card:nth-of-type(1) { animation-delay: .06s; }
+        .card:nth-of-type(2) { animation-delay: .14s; }
+        .card:hover {
+            border-color: var(--bg3);
+            box-shadow: var(--shadow-hover);
+            transform: translateY(-2px);
+        }
+        .card-label {
+            color: var(--aqua);
+            font-size: .9rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+
+        /* ── mode toggle ────────────────────────────── */
+        .toggle {
+            display: flex;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid var(--bg2);
+            margin-bottom: 10px;
+        }
+        .tog {
+            flex: 1;
+            padding: 10px 0;
+            border: none;
+            background: var(--bg2);
+            color: var(--fg3);
+            font: 500 .78rem var(--font);
+            cursor: pointer;
+            transition: all var(--speed) var(--ease);
+            position: relative;
+        }
+        .tog::after {
+            content: '';
+            position: absolute; bottom: 0; left: 50%; width: 0; height: 2px;
+            background: var(--orange);
+            transition: all var(--speed) var(--ease);
+            transform: translateX(-50%);
+        }
+        .tog:first-child { border-right: 1px solid var(--bg1); }
+        .tog.on { background: var(--orange-d); color: var(--bg0); font-weight: 700; }
+        .tog.on::after { width: 60%; }
+        .tog:hover:not(.on) { background: var(--bg3); color: var(--fg); }
+
+        /* ── hint ───────────────────────────────────── */
+        .hint {
+            font-size: .62rem;
+            color: var(--gray);
+            line-height: 1.7;
+            margin-bottom: 12px;
+            transition: opacity .3s var(--ease);
+        }
+        .hint strong { color: var(--fg3); }
+
+        /* ── input ──────────────────────────────────── */
+        .inp {
+            width: 100%;
+            padding: 12px 14px;
+            border-radius: 8px;
+            border: 2px solid var(--bg2);
+            background: var(--bg0);
+            color: var(--fg);
+            font: .85rem var(--font);
+            margin-bottom: 12px;
+            outline: none;
+            transition:
+                border-color var(--speed) var(--ease),
+                box-shadow   var(--speed) var(--ease);
+        }
+        .inp::placeholder { color: var(--bg3); }
+        .inp:focus {
+            border-color: var(--blue);
+            box-shadow: 0 0 0 3px rgba(69,133,136,.18);
+        }
+
+        /* ── button ─────────────────────────────────── */
+        .btn {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background: var(--blue-d);
+            color: var(--fg);
+            font: 700 .85rem var(--font);
+            cursor: pointer;
+            letter-spacing: .4px;
+            transition: all .2s var(--ease);
+            position: relative;
+            overflow: hidden;
+        }
+        .btn::before {
+            content: '';
+            position: absolute; inset: 0;
+            background: linear-gradient(90deg,transparent,rgba(255,255,255,.06),transparent);
+            background-size: 200% 100%;
+            opacity: 0;
+            transition: opacity .3s;
+        }
+        .btn:hover:not(:disabled) {
+            background: var(--blue);
+            color: var(--bg0);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(69,133,136,.35);
+        }
+        .btn:hover:not(:disabled)::before {
+            opacity: 1;
+            animation: shimmer 1.5s infinite;
+        }
+        .btn:active:not(:disabled) { transform: translateY(0); box-shadow: none; }
+        .btn:disabled {
+            background: var(--bg2); color: var(--bg3);
+            cursor: not-allowed; transform: none;
+        }
+
+        /* ── status ─────────────────────────────────── */
+        #status { margin-top: 14px; min-height: 18px; font-size: .72rem; line-height: 1.7; word-break: break-word; }
+        .st      { display: inline-block; animation: fadeUp .28s var(--ease); }
+        .s-ok    { color: var(--green); }
+        .s-err   { color: var(--red); }
+        .s-load  { color: var(--orange); animation: pulse 1.6s ease-in-out infinite !important; }
+        .s-mute  { color: var(--gray); }
+
+        /* ── table ──────────────────────────────────── */
+        .scroll { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: .7rem; }
+        th {
+            background: var(--bg2); color: var(--fg2);
+            padding: 9px 10px; text-align: left;
+            font-weight: 600; white-space: nowrap;
+        }
+        td {
+            padding: 7px 10px;
+            border-bottom: 1px solid var(--bg2);
+            max-width: 220px; overflow: hidden;
+            text-overflow: ellipsis; white-space: nowrap;
+            color: var(--fg2);
+        }
+        tbody tr { transition: background var(--speed) var(--ease); }
+        tbody tr:hover { background: rgba(80,73,69,.25); }
+
+        .bar-bg {
+            background: var(--bg2);
+            width: 100%; height: 5px;
+            border-radius: 3px;
+            overflow: hidden; margin-bottom: 3px;
+        }
+        .bar-fg {
+            height: 100%; width: 0%;
+            border-radius: 3px;
+            background: linear-gradient(90deg, var(--aqua-d), var(--aqua));
+            transition: width .7s var(--ease);
+        }
+        .empty { text-align: center; color: var(--bg3); font-style: italic; padding: 18px 10px !important; }
+
+        @media (max-width:520px) {
+            body { padding: 14px 6px; }
+            .card { padding: 16px; }
+            td,th { padding: 5px 6px; font-size: .64rem; }
+            td { max-width: 110px; }
+        }
+    </style>
+</head>
+<body>
+
+<h1 class="title"> 𓅪 Slskd Music Requester  </h1>
+
+<div class="card">
+    <div class="card-label">search & download</div>
+
+    <div class="toggle">
+        <button class="tog on" onclick="setMode('album',this)">⊞ album</button>
+        <button class="tog"    onclick="setMode('track',this)">♫ track</button>
+    </div>
+
+    <div class="hint" id="hint">
+        downloads a complete album folder in the best available quality (prefers FLAC).<br>
+        try: <strong>pink floyd dark side of the moon</strong> · <strong>daft punk discovery</strong>
+    </div>
+
+    <input class="inp" type="text" id="q"
+           placeholder="artist album..."
+           autocomplete="off"
+           onkeydown="if(event.key==='Enter')go()">
+
+    <button class="btn" id="goBtn" onclick="go()">search & download</button>
+    <div id="status"><span class="st s-mute">ready.</span></div>
+</div>
+
+<div class="card" style="max-width:var(--table-max)">
+    <div class="card-label">downloads</div>
+    <div class="scroll">
+        <table>
+            <thead><tr><th>file</th><th>user</th><th>progress</th><th>state</th></tr></thead>
+            <tbody id="dl"><tr><td colspan="4" class="empty">nothing yet.</td></tr></tbody>
+        </table>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<script>src="/config.js"</script>
+<script>
+/* ╔═══════════════════════════════════════════════════════════════════╗
+   ║  CONFIG — edit anything here to customise behaviour              ║
+   ╚═══════════════════════════════════════════════════════════════════╝ */
+const CFG = {
+
+    // ─── Connection ─────────────────────────────────────────────────
+    API_KEY     : (window.SLSKD_CONFIG && window.SLSKD_CONFIG.API_KEY)  || '',
+    API_BASE    : (window.SLSKD_CONFIG && window.SLSKD_CONFIG.API_BASE) || '/api/v0',
+
+    // ─── Search Timing ──────────────────────────────────────────────
+    POLLS       : 24,        // number of polling rounds
+    DELAY       : 2500,      // ms between polls  (total max ≈ 60 s)
+
+    // ─── Album Rules ────────────────────────────────────────────────
+    MIN_TRACKS  : 4,         // minimum audio files for a folder to be an "album"
+    REL_GATE    : 0.45,      // 0–1  fraction of query words that must appear in path
+
+    // ─── Quality ────────────────────────────────────────────────────
+    MIN_KBPS    : 128,       // ignore lossy files below this bitrate
+
+    // ─── Scoring Weights (tweak to taste) ───────────────────────────
+    W_REL       : 200,       // relevance ceiling  (path matches all query words → 200)
+    W_FLAC      : 100,       // bonus for FLAC
+    W_320       : 65,        // 320 kbps
+    W_256       : 45,
+    W_192       : 30,
+    W_LOW       : 8,
+    W_TRACK     : 3,         // per extra track in album
+    W_TRACK_CAP : 45,        // max completeness bonus
+    W_SLOT      : 25,        // user has a free upload slot
+    W_Q_PEN     : 0.4,       // per queued item
+    W_Q_CAP     : 25,        // max queue penalty
+    W_NOISE     : 90,        // penalty for covers / remixes / tributes
+
+    // ─── Early-Exit Thresholds ──────────────────────────────────────
+    ALBUM_EXIT_REL   : 0.75,
+    ALBUM_EXIT_SCORE : 280,
+    ALBUM_EXIT_FILES : 6,
+    ALBUM_EXIT_POLL  : 6,     // don't exit before this many polls
+    TRACK_EXIT_REL   : 0.7,
+    TRACK_EXIT_SCORE : 240,
+    TRACK_EXIT_POLL  : 4,
+
+    // ─── Download Monitor ───────────────────────────────────────────
+    MON_MS      : 2500
+};
+/* ═══════════════════════════════════════════════════════════════════ */
+
+
+/* ── constants ──────────────────────────────────────────────────── */
+const AUDIO = /\.(flac|mp3|ogg|opus|m4a|aac|wav|wma|alac|ape|wv)$/i;
+const NOISE = /\b(cover|covers|covered|remix|remixed|remixes|bootleg|tribute|karaoke|mashup|8[- ]?bit)\b/i;
+const STOPS = new Set(
+    'a an the and or for but not of to in on at by is it its this that with from as so if'.split(' ')
+);
+
+let mode = 'album';
+
+
+/* ══════════════════ UI HELPERS ═════════════════════════════════ */
+
+function setMode(m, el) {
+    mode = m;
+    document.querySelectorAll('.tog').forEach(b => b.classList.remove('on'));
+    el.classList.add('on');
+    const h = document.getElementById('hint');
+    const q = document.getElementById('q');
+    if (m === 'album') {
+        h.innerHTML =
+            'downloads a complete album folder in the best available quality (prefers FLAC).<br>' +
+            'try: <strong>pink floyd dark side of the moon</strong> · <strong>daft punk discovery</strong>';
+        q.placeholder = 'artist album...';
+    } else {
+        h.innerHTML =
+            'finds the single best-quality file matching your search.<br>' +
+            'try: <strong>pink floyd comfortably numb</strong> · <strong>daft punk get lucky</strong>';
+        q.placeholder = 'artist song...';
+    }
+}
+
+function stat(html) {
+    document.getElementById('status').innerHTML = `<span class="st">${html}</span>`;
+}
+
+function tail(p) { return p.split('\\').pop(); }
+
+
+/* ══════════════════ QUERY + SCORING ═══════════════════════════ */
+
+function clean(s) {
+    return s.normalize('NFKD').replace(/[\u0300-\u036f]/g, '')
+        .replace(/[''""`,!?;:()[\]{}<>@#$%^&*~_=+]/g, '')
+        .replace(/\s*[-–—/|]+\s*/g, ' ')
+        .replace(/\s+/g, ' ').trim();
+}
+
+function sigWords(q) {
+    return q.toLowerCase().split(/\s+/).filter(w => w.length > 1 && !STOPS.has(w));
+}
+
+function relScore(text, ws) {
+    if (!ws.length) return 0;
+    const t = text.toLowerCase();
+    let h = 0;
+    for (const w of ws) if (t.includes(w)) h++;
+    return h / ws.length;            // 0 → 1
+}
+
+function qualPts(files) {
+    const n = files.length; if (!n) return CFG.W_LOW;
+    const fl = files.filter(f => /\.flac$/i.test(f.filename)).length;
+    if (fl / n >= 0.75) return CFG.W_FLAC;
+    const avg = files.reduce((s, f) => s + (f.bitRate || 0), 0) / n;
+    if (avg >= 320) return CFG.W_320;
+    if (avg >= 256) return CFG.W_256;
+    if (avg >= 192) return CFG.W_192;
+    return CFG.W_LOW;
+}
+
+function isLowQuality(f) {
+    if (/\.flac$/i.test(f.filename)) return false;
+    return (f.bitRate || 9999) < CFG.MIN_KBPS;
+}
+
+
+/* ══════════════════ ALBUM FINDER ══════════════════════════════ */
+
+function bestAlbum(responses, ws) {
+    const dirs = [];
+
+    for (const r of responses) {
+        const map = {};
+        for (const f of (r.files || [])) {
+            if (!AUDIO.test(f.filename) || isLowQuality(f)) continue;
+
+            const parts = f.filename.split('\\');
+            parts.pop();                            // drop file name
+            const key = r.username + '|' + parts.join('\\');   // unique per user+dir
+
+            if (!map[key]) {
+                map[key] = {
+                    username : r.username,
+                    directory: parts.join('\\'),
+                    dirName  : parts[parts.length - 1] || '?',
+                    files    : [],
+                    queueLen : r.queueLength        || 0,
+                    freeSlot : r.hasFreeUploadSlot   || false
+                };
+            }
+            map[key].files.push(f);
+        }
+
+        for (const d of Object.values(map))
+            if (d.files.length >= CFG.MIN_TRACKS) dirs.push(d);
+    }
+
+    /* score every candidate directory */
+    for (const d of dirs) {
+        const rv = relScore(d.directory, ws);
+        d.relevance = rv;
+
+        let s  = rv * CFG.W_REL;                                        // 0 – 200
+        s += qualPts(d.files);                                           // 0 – 100
+        s += Math.min(d.files.length * CFG.W_TRACK, CFG.W_TRACK_CAP);   // 0 –  45
+        if (d.freeSlot) s += CFG.W_SLOT;                                 //      25
+        s -= Math.min(d.queueLen * CFG.W_Q_PEN, CFG.W_Q_CAP);           // 0 – -25
+        if (NOISE.test(d.directory)) s -= CFG.W_NOISE;                   //     -90
+
+        d.score = s;
+    }
+
+    /* keep only relevant dirs; fall back to all if none pass */
+    let pool = dirs.filter(d => d.relevance >= CFG.REL_GATE);
+    if (!pool.length) pool = dirs;
+
+    pool.sort((a, b) => {
+        if (b.score !== a.score) return b.score - a.score;
+        return a.queueLen - b.queueLen;
+    });
+    return pool[0] || null;
+}
+
+
+/* ══════════════════ TRACK FINDER ══════════════════════════════ */
+
+function bestTrack(responses, ws) {
+    const pool = [];
+
+    for (const r of responses) {
+        for (const f of (r.files || [])) {
+            if (!AUDIO.test(f.filename) || isLowQuality(f)) continue;
+
+            const rv = relScore(f.filename, ws);
+            if (rv < CFG.REL_GATE) continue;
+
+            const isFl = /\.flac$/i.test(f.filename);
+            let qs;
+            if (isFl)                       qs = CFG.W_FLAC;
+            else if ((f.bitRate||0) >= 320) qs = CFG.W_320;
+            else if ((f.bitRate||0) >= 256) qs = CFG.W_256;
+            else if ((f.bitRate||0) >= 192) qs = CFG.W_192;
+            else                            qs = CFG.W_LOW;
+
+            let s = rv * CFG.W_REL + qs;
+            if (r.hasFreeUploadSlot) s += CFG.W_SLOT;
+            s -= Math.min((r.queueLength||0) * CFG.W_Q_PEN, CFG.W_Q_CAP);
+            if (NOISE.test(f.filename)) s -= CFG.W_NOISE;
+
+            pool.push({
+                username: r.username, file: f,
+                score: s, relevance: rv,
+                queue: r.queueLength||0,
+                freeSlot: r.hasFreeUploadSlot||false
+            });
+        }
+    }
+
+    pool.sort((a, b) => b.score - a.score);
+    return pool[0] || null;
+}
+
+
+/* ══════════════════ FETCH HELPER ══════════════════════════════ */
+
+async function jf(r) {
+    if (r.status === 404 || r.status === 204) return null;
+    const t = await r.text();
+    try { return t ? JSON.parse(t) : null; } catch { return null; }
+}
+
+
+/* ══════════════════ DOWNLOAD MONITOR ══════════════════════════ */
+
+setInterval(mon, CFG.MON_MS);
+
+async function mon() {
+    try {
+        const r  = await fetch(`${CFG.API_BASE}/transfers/downloads`,
+                               { headers: { 'X-API-Key': CFG.API_KEY } });
+        const d  = await jf(r);
+        const tb = document.getElementById('dl');
+        const rows = [];
+
+        if (Array.isArray(d)) for (const u of d) {
+            for (const dir of (u.directories || []))
+                for (const f of (dir.files || [])) rows.push({ user: u.username, f });
+            if (!u.directories && u.files)
+                for (const f of u.files) rows.push({ user: u.username, f });
+        }
+
+        if (!rows.length) {
+            tb.innerHTML = '<tr><td colspan="4" class="empty">nothing active.</td></tr>';
+            return;
+        }
+
+        tb.innerHTML = rows.map(({ user, f }) => {
+            const p  = f.percentComplete != null
+                     ? f.percentComplete.toFixed(1)
+                     : f.size > 0 ? ((f.bytesTransferred||0)/f.size*100).toFixed(1) : '0.0';
+            const st = f.state || '…';
+            const c  = /complet|succeed/i.test(st) ? 's-ok'
+                     : /error|fail|abort|cancel|timed|reject/i.test(st) ? 's-err' : '';
+            return `<tr>
+                <td title="${f.filename}">${tail(f.filename)}</td>
+                <td>${user}</td>
+                <td><div class="bar-bg"><div class="bar-fg" style="width:${p}%"></div></div>${p}%</td>
+                <td class="${c}">${st}</td></tr>`;
+        }).join('');
+    } catch (e) { console.error('mon', e); }
+}
+
+
+/* ══════════════════ MAIN HANDLER ══════════════════════════════ */
+
+async function go() {
+    const raw = document.getElementById('q').value;
+    if (!raw.trim()) return;
+
+    const q   = clean(raw);
+    const ws  = sigWords(q);
+    const btn = document.getElementById('goBtn');
+    btn.disabled = true;
+    stat(`<span class="s-load">searching "${q}" …</span>`);
+
+    try {
+        /* ── 1  create search ──────────────────────────────────── */
+        const sr = await fetch(`${CFG.API_BASE}/searches`, {
+            method: 'POST',
+            headers: { 'X-API-Key': CFG.API_KEY, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ searchText: q })
+        });
+        if (!sr.ok) throw new Error(`search create failed (${sr.status})`);
+        const sd = await jf(sr);
+        if (!sd?.id) throw new Error('no search id returned');
+        const sid = sd.id;
+
+        /* ── 2  poll for responses ─────────────────────────────── */
+        let pick = null, sources = 0, lastRes = [];
+
+        for (let i = 0; i < CFG.POLLS; i++) {
+            stat(`<span class="s-load">poll ${i+1}/${CFG.POLLS} · ${sources} sources</span>`);
+            await new Promise(ok => setTimeout(ok, CFG.DELAY));
+
+            const rr = await fetch(`${CFG.API_BASE}/searches/${sid}/responses`,
+                                   { headers: { 'X-API-Key': CFG.API_KEY } });
+            const rd = await jf(rr);
+            if (!rd) continue;
+
+            const res = Array.isArray(rd) ? rd
+                      : Array.isArray(rd.responses) ? rd.responses : [];
+            sources = res.length;
+            if (!sources) continue;
+            lastRes = res;
+
+            pick = mode === 'album' ? bestAlbum(res, ws) : bestTrack(res, ws);
+
+            /* early exit when confident */
+            if (pick && mode === 'album'
+                && pick.relevance >= CFG.ALBUM_EXIT_REL
+                && pick.score     >= CFG.ALBUM_EXIT_SCORE
+                && pick.files.length >= CFG.ALBUM_EXIT_FILES
+                && i >= CFG.ALBUM_EXIT_POLL) break;
+
+            if (pick && mode === 'track'
+                && pick.relevance >= CFG.TRACK_EXIT_REL
+                && pick.score     >= CFG.TRACK_EXIT_SCORE
+                && i >= CFG.TRACK_EXIT_POLL) break;
+        }
+
+        /* ── 2b  fallback to opposite mode ─────────────────────── */
+        if (!pick && lastRes.length) {
+            pick = mode === 'album' ? bestTrack(lastRes, ws) : bestAlbum(lastRes, ws);
+            if (pick) pick._fb = mode === 'album' ? 'track' : 'album';
+        }
+
+        if (!pick) throw new Error(
+            `no ${mode} results across ${sources} sources — try simpler or different terms`
+        );
+
+        /* ── 3  queue download ─────────────────────────────────── */
+        const isAlb = !pick.file && pick.files && pick.files.length > 1;
+        const user  = pick.username;
+        const files = isAlb
+            ? pick.files.map(f => ({ filename: f.filename, size: f.size }))
+            : [(() => { const f = pick.file || pick.files[0]; return { filename: f.filename, size: f.size }; })()];
+
+        const label = isAlb
+            ? (() => {
+                const fl = pick.files.filter(f => /\.flac$/i.test(f.filename)).length;
+                const qt = fl >= pick.files.length * .75 ? 'FLAC' : `${pick.files.length} files`;
+                return `📂 ${pick.dirName} · ${fl ? fl + ' FLAC' : qt} · ${user}`;
+              })()
+            : `♫ ${tail((pick.file || pick.files[0]).filename)} · ${user}`;
+
+        stat(`<span class="s-load">queueing ${files.length} file${files.length > 1 ? 's' : ''} …</span>`);
+
+        const dr = await fetch(
+            `${CFG.API_BASE}/transfers/downloads/${encodeURIComponent(user)}`, {
+                method: 'POST',
+                headers: { 'X-API-Key': CFG.API_KEY, 'Content-Type': 'application/json' },
+                body: JSON.stringify(files)
+            });
+
+        if (dr.ok || dr.status === 201) {
+            const fb = pick._fb
+                ? `<br><span class="s-mute">(no ${mode} found — used ${pick._fb} mode)</span>` : '';
+            stat(`<span class="s-ok">✓ queued — ${label}</span>${fb}`);
+            document.getElementById('q').value = '';
+        } else {
+            throw new Error(`download failed (${dr.status}): ${await dr.text()}`);
+        }
+
+        /* clean up search */
+        fetch(`${CFG.API_BASE}/searches/${sid}`,
+              { method: 'DELETE', headers: { 'X-API-Key': CFG.API_KEY } }).catch(() => {});
+
+    } catch (e) {
+        stat(`<span class="s-err">✗ ${e.message}</span>`);
+        console.error(e);
+    } finally {
+        btn.disabled = false;
+    }
+}
+</script>
+</body>
+</html>
