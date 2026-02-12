@@ -72,7 +72,7 @@ services:
     ports:
       - "8082:80"
     environment:
-      - SLSKD_BASE_URL=http://gluetun:5030      # or http://slskd:5030
+      - SLSKD_BASE_URL=http://localhost:5030      # or http://slskd:5030
       - SLSKD_API_KEY=your-api-key-here
     restart: unless-stopped
 ```
