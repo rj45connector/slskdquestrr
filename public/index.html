@@ -267,6 +267,73 @@
             box-shadow: 0 3px 10px rgba(214,93,14,.3);
         }
 
+        /* ── cat filter button ─────────────────────── */
+        .dl-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+        .dl-head .card-label { margin-bottom: 0; }
+        .cat-btn {
+            background: none;
+            border: 1px solid transparent;
+            color: var(--gray);
+            font-size: 1.15rem;
+            padding: 4px 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all .3s var(--ease);
+            line-height: 1;
+        }
+        .cat-btn:hover {
+            color: var(--yellow);
+            transform: scale(1.25) rotate(-10deg);
+        }
+        .cat-btn.on {
+            color: var(--orange);
+            background: rgba(214,93,14,.15);
+            border-color: var(--orange-d);
+        }
+        .cat-btn.on:hover {
+            color: var(--yellow);
+        }
+
+        /* ── pagination ────────────────────────────── */
+        .pager {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            padding-top: 12px;
+        }
+        .pg-btn {
+            background: var(--bg2);
+            border: none;
+            color: var(--fg3);
+            font: 600 .72rem var(--font);
+            padding: 4px 11px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all .15s var(--ease);
+        }
+        .pg-btn:hover:not(:disabled) {
+            background: var(--bg3);
+            color: var(--fg);
+        }
+        .pg-btn:disabled { opacity: .2; cursor: default; }
+        .pg-info {
+            font-size: .62rem;
+            color: var(--fg3);
+            min-width: 50px;
+            text-align: center;
+        }
+        .pg-note {
+            font-size: .58rem;
+            color: var(--bg4);
+            margin-left: 6px;
+        }
+
         @media (max-width:520px) {
             body { padding: 14px 6px; }
             .card { padding: 16px; }
@@ -303,13 +370,17 @@
 </div>
 
 <div class="card" style="max-width:var(--table-max)">
-    <div class="card-label">downloads</div>
+    <div class="dl-head">
+        <div class="card-label">downloads</div>
+        <button class="cat-btn" onclick="toggleFilter()" title="hide completed — show active only">𓃠</button>
+    </div>
     <div class="scroll">
         <table>
             <thead><tr><th>file</th><th>user</th><th>progress</th><th>state</th></tr></thead>
             <tbody id="dl"><tr><td colspan="4" class="empty">nothing yet.</td></tr></tbody>
         </table>
     </div>
+    <div id="pager" class="pager"></div>
     <div id="retries"></div>
 </div>
 
@@ -365,12 +436,13 @@ const CFG = {
     RETRY_POLL  : 1500,
 
     // ─── Background Watcher — timeout / delayed failures ────────────
-    WATCH_GRACE : 90000,     // 90 s grace before auto-retrying timed-out downloads
-    WATCH_MAX   : 3,         // max background auto-retries per job
-    WATCH_POLL  : 10000,     // run watcher every 10 s (inside mon cycle)
+    WATCH_GRACE : 90000,
+    WATCH_MAX   : 3,
+    WATCH_POLL  : 10000,
 
     // ─── Download Monitor ───────────────────────────────────────────
-    MON_MS      : 2500
+    MON_MS      : 2500,
+    PER_PAGE    : 15
 };
 /* ═══════════════════════════════════════════════════════════════════ */
 
@@ -382,9 +454,11 @@ const STOPS = new Set(
     'a an the and or for but not of to in on at by is it its this that with from as so if'.split(' ')
 );
 
-let mode = 'album';
-const watchlist = new Map();   // jobId → { query, mode, ws, candidates, attempt, user, filenames, label, queuedAt, retries, exhausted, retrying }
-let lastWatch = 0;
+let mode        = 'album';
+let showActive  = false;   // cat filter state
+let dlPage      = 1;       // current table page
+const watchlist = new Map();
+let lastWatch   = 0;
 
 
 /* ══════════════════ UI HELPERS ═════════════════════════════════ */
@@ -414,6 +488,15 @@ function stat(html) {
 
 function tail(p) { return p.split('\\').pop(); }
 function esc(s) { return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]); }
+
+function toggleFilter() {
+    showActive = !showActive;
+    document.querySelector('.cat-btn').classList.toggle('on', showActive);
+    dlPage = 1;
+    mon();
+}
+
+function dlPg(d) { dlPage += d; mon(); }
 
 
 /* ══════════════════ QUERY + SCORING ═══════════════════════════ */
@@ -458,7 +541,6 @@ function isLowQuality(f) {
 
 function rankAlbums(responses, ws) {
     const dirs = [];
-
     for (const r of responses) {
         const map = {};
         for (const f of (r.files || [])) {
@@ -481,7 +563,6 @@ function rankAlbums(responses, ws) {
         for (const d of Object.values(map))
             if (d.files.length >= CFG.MIN_TRACKS) dirs.push(d);
     }
-
     for (const d of dirs) {
         const rv = relScore(d.directory, ws);
         d.relevance = rv;
@@ -493,10 +574,8 @@ function rankAlbums(responses, ws) {
         if (NOISE.test(d.directory)) s -= CFG.W_NOISE;
         d.score = s;
     }
-
     let pool = dirs.filter(d => d.relevance >= CFG.REL_GATE);
     if (!pool.length) pool = dirs;
-
     pool.sort((a, b) => {
         if (b.score !== a.score) return b.score - a.score;
         return a.queueLen - b.queueLen;
@@ -511,7 +590,6 @@ function rankTracks(responses, ws) {
             if (!AUDIO.test(f.filename) || isLowQuality(f)) continue;
             const rv = relScore(f.filename, ws);
             if (rv < CFG.REL_GATE) continue;
-
             const isFl = /\.flac$/i.test(f.filename);
             let qs;
             if (isFl)                       qs = CFG.W_FLAC;
@@ -519,12 +597,10 @@ function rankTracks(responses, ws) {
             else if ((f.bitRate||0) >= 256) qs = CFG.W_256;
             else if ((f.bitRate||0) >= 192) qs = CFG.W_192;
             else                            qs = CFG.W_LOW;
-
             let s = rv * CFG.W_REL + qs;
             if (r.hasFreeUploadSlot) s += CFG.W_SLOT;
             s -= Math.min((r.queueLength||0) * CFG.W_Q_PEN, CFG.W_Q_CAP);
             if (NOISE.test(f.filename)) s -= CFG.W_NOISE;
-
             pool.push({
                 username: r.username, file: f,
                 score: s, relevance: rv,
@@ -563,7 +639,6 @@ function prepPick(pick) {
     return { user, files, label };
 }
 
-/** Collect files from a slskd user download entry. */
 function collectFiles(ue) {
     const all = [];
     for (const dir of (ue.directories || []))
@@ -573,24 +648,17 @@ function collectFiles(ue) {
     return all;
 }
 
-/**
- * Check the download state for specific files from `user`.
- * Returns: 'completed' | 'progressing' | 'pending' | 'rejected' | 'timedout' | 'errored'
- */
 async function dlState(user, filenames) {
     try {
         const r = await fetch(`${CFG.API_BASE}/transfers/downloads`,
                               { headers: { 'X-API-Key': CFG.API_KEY } });
         const data = await jf(r);
         if (!Array.isArray(data)) return 'pending';
-
         const ue = data.find(u => u.username === user);
         if (!ue) return 'pending';
-
         const all  = collectFiles(ue);
         const want = new Set(filenames.map(n => n.toLowerCase()));
         const matched = all.filter(f => f.filename && want.has(f.filename.toLowerCase()));
-
         if (!matched.length) return 'pending';
 
         let ok = 0, prog = 0, rej = 0, tout = 0, err = 0;
@@ -601,35 +669,26 @@ async function dlState(user, filenames) {
             else if (/Reject/i.test(st))             rej++;
             else if (/Timed|Timeout/i.test(st))      tout++;
             else if (/Error|Fail|Abort/i.test(st))   err++;
-            /* else: Queued / Requested / unknown → pending */
         }
-
         if (prog > 0) return 'progressing';
         if (ok === matched.length) return 'completed';
         if (rej  > 0) return 'rejected';
         if (tout > 0) return 'timedout';
         if (err  > 0) return 'errored';
-
         return 'pending';
     } catch { return 'pending'; }
 }
 
-/**
- * Monitor a queued download for quick rejection / timeout.
- * Returns 'failed' fast if the peer refuses, otherwise 'ok'.
- */
 async function awaitDl(user, filenames) {
     const deadline = Date.now() + CFG.RETRY_MS;
     await new Promise(ok => setTimeout(ok, CFG.RETRY_POLL));
-
     while (Date.now() < deadline) {
         const s = await dlState(user, filenames);
         if (s === 'rejected' || s === 'timedout' || s === 'errored') return 'failed';
         if (s === 'progressing' || s === 'completed') return 'ok';
         await new Promise(ok => setTimeout(ok, CFG.RETRY_POLL));
     }
-
-    return 'ok';   // monitoring timeout → assume working
+    return 'ok';
 }
 
 
@@ -638,18 +697,13 @@ async function awaitDl(user, filenames) {
 async function watchJobs() {
     for (const [id, job] of watchlist) {
         if (job.exhausted || job.retrying) continue;
-
-        /* first failure: generous grace for timeouts;
-           subsequent retries: shorter grace for quick rejects */
         const grace = job.retries === 0 ? CFG.WATCH_GRACE : CFG.RETRY_MS * 2;
         if (Date.now() - job.queuedAt < grace) continue;
 
         const state = await dlState(job.user, job.filenames);
-
         if (state === 'completed') { watchlist.delete(id); continue; }
         if (state === 'progressing' || state === 'pending') continue;
 
-        /* ── failed: rejected / timedout / errored ── */
         const next = job.attempt + 1;
         if (next < job.candidates.length && job.retries < CFG.WATCH_MAX) {
             job.retrying = true;
@@ -661,7 +715,6 @@ async function watchJobs() {
                         headers: { 'X-API-Key': CFG.API_KEY, 'Content-Type': 'application/json' },
                         body   : JSON.stringify(files)
                     });
-
                 if (dr.ok || dr.status === 201) {
                     job.attempt   = next;
                     job.user      = user;
@@ -669,31 +722,24 @@ async function watchJobs() {
                     job.label     = label;
                     job.queuedAt  = Date.now();
                     job.retries++;
-                    console.log(`[watch] auto-retry "${job.query}" → ${user} (attempt ${job.retries})`);
                 } else {
-                    /* queue call itself failed — advance attempt so next cycle tries the one after */
                     job.attempt = next;
                 }
             } catch (e) { console.error('[watch] retry error', e); }
             job.retrying = false;
         } else {
             job.exhausted = true;
-            console.log(`[watch] "${job.query}" exhausted all ${job.candidates.length} sources`);
         }
     }
-
-    /* clean up stale jobs (> 2 hours) */
     const stale = Date.now() - 7200000;
     for (const [id, job] of watchlist) {
         if (job.queuedAt < stale) watchlist.delete(id);
     }
 }
 
-/** Render retry notification bars below the downloads table. */
 function updateRetryArea() {
     const el = document.getElementById('retries');
     if (!el) return;
-
     const bars = [];
     for (const [id, job] of watchlist) {
         if (job.retrying) {
@@ -716,18 +762,14 @@ function updateRetryArea() {
     el.innerHTML = bars.join('');
 }
 
-/** Manual retry: repopulate search box and rerun go(). */
 function manualRetry(id) {
     const job = watchlist.get(id);
     if (!job) return;
-
     document.getElementById('q').value = job.query;
-
     if (mode !== job.mode) {
         const btns = document.querySelectorAll('.tog');
         setMode(job.mode, job.mode === 'album' ? btns[0] : btns[1]);
     }
-
     watchlist.delete(id);
     go();
 }
@@ -743,6 +785,7 @@ async function mon() {
                                { headers: { 'X-API-Key': CFG.API_KEY } });
         const d  = await jf(r);
         const tb = document.getElementById('dl');
+        const pg = document.getElementById('pager');
         const rows = [];
 
         if (Array.isArray(d)) for (const u of d) {
@@ -750,10 +793,39 @@ async function mon() {
             for (const f of all) rows.push({ user: u.username, f });
         }
 
-        if (!rows.length) {
-            tb.innerHTML = '<tr><td colspan="4" class="empty">nothing active.</td></tr>';
+        /* ── filter ────────────────────────────────────────── */
+        let visible = rows;
+        if (showActive) {
+            visible = rows.filter(({ f }) =>
+                /Queue|Request|Initializ|Progress/i.test(f.state || '') || !(f.state || '')
+            );
+        }
+
+        /* ── cat button tooltip ────────────────────────────── */
+        const catBtn = document.querySelector('.cat-btn');
+        if (catBtn) {
+            const h = rows.length - visible.length;
+            catBtn.title = showActive
+                ? `showing active only (${h} hidden) — click to show all`
+                : 'hide completed — show active only';
+        }
+
+        /* ── empty states ──────────────────────────────────── */
+        if (!visible.length && rows.length && showActive) {
+            tb.innerHTML = '<tr><td colspan="4" class="empty">all downloads filtered — click 𓃠 to show</td></tr>';
+            pg.innerHTML = '';
+        } else if (!visible.length) {
+            tb.innerHTML = '<tr><td colspan="4" class="empty">nothing yet.</td></tr>';
+            pg.innerHTML = '';
         } else {
-            tb.innerHTML = rows.map(({ user, f }) => {
+
+            /* ── paginate ──────────────────────────────────── */
+            const pages = Math.ceil(visible.length / CFG.PER_PAGE);
+            dlPage = Math.max(1, Math.min(dlPage, pages));
+            const start = (dlPage - 1) * CFG.PER_PAGE;
+            const slice = visible.slice(start, start + CFG.PER_PAGE);
+
+            tb.innerHTML = slice.map(({ user, f }) => {
                 const p  = f.percentComplete != null
                          ? f.percentComplete.toFixed(1)
                          : f.size > 0 ? ((f.bytesTransferred||0)/f.size*100).toFixed(1) : '0.0';
@@ -766,15 +838,25 @@ async function mon() {
                     <td><div class="bar-bg"><div class="bar-fg" style="width:${p}%"></div></div>${p}%</td>
                     <td class="${c}">${esc(st)}</td></tr>`;
             }).join('');
+
+            /* ── pager controls ────────────────────────────── */
+            if (pages > 1) {
+                const note = showActive ? '' : `<span class="pg-note">${visible.length} total</span>`;
+                pg.innerHTML =
+                    `<button class="pg-btn" onclick="dlPg(-1)" ${dlPage<=1?'disabled':''}>◂</button>` +
+                    `<span class="pg-info">${dlPage} / ${pages}</span>` +
+                    `<button class="pg-btn" onclick="dlPg(1)" ${dlPage>=pages?'disabled':''}>▸</button>` +
+                    note;
+            } else {
+                pg.innerHTML = '';
+            }
         }
 
-        /* run background watcher every WATCH_POLL ms */
+        /* ── background watcher ────────────────────────────── */
         if (watchlist.size > 0 && Date.now() - lastWatch >= CFG.WATCH_POLL) {
             lastWatch = Date.now();
             await watchJobs();
         }
-
-        /* always refresh retry UI */
         updateRetryArea();
 
     } catch (e) { console.error('mon', e); }
@@ -794,7 +876,6 @@ async function go() {
     stat(`<span class="s-load">searching "${esc(q)}" …</span>`);
 
     try {
-        /* ── 1  create search ──────────────────────────────────── */
         const sr = await fetch(`${CFG.API_BASE}/searches`, {
             method: 'POST',
             headers: { 'X-API-Key': CFG.API_KEY, 'Content-Type': 'application/json' },
@@ -805,7 +886,6 @@ async function go() {
         if (!sd?.id) throw new Error('no search id returned');
         const sid = sd.id;
 
-        /* ── 2  poll for responses ─────────────────────────────── */
         let candidates = [], sources = 0, lastRes = [];
 
         for (let i = 0; i < CFG.POLLS; i++) {
@@ -838,7 +918,6 @@ async function go() {
                 && i >= CFG.TRACK_EXIT_POLL) break;
         }
 
-        /* ── 2b  fallback to opposite mode ─────────────────────── */
         let fb = null;
         if (!candidates.length && lastRes.length) {
             candidates = mode === 'album' ? rankTracks(lastRes, ws) : rankAlbums(lastRes, ws);
@@ -849,10 +928,8 @@ async function go() {
             `no ${mode} results across ${sources} sources — try simpler or different terms`
         );
 
-        /* ── 3  try candidates with instant-retry ──────────────── */
-        let queued   = false;
-        let lastErr  = '';
-        let winIdx   = -1;
+        let queued  = false;
+        let lastErr = '';
 
         for (let a = 0; a < candidates.length; a++) {
             const { user, files, label } = prepPick(candidates[a]);
@@ -872,7 +949,6 @@ async function go() {
                 continue;
             }
 
-            /* monitor for quick failure */
             stat(`<span class="s-load">verifying${tag} …</span>`);
             const result = await awaitDl(user, files.map(f => f.filename));
             if (result === 'failed') {
@@ -881,7 +957,6 @@ async function go() {
                 continue;
             }
 
-            /* ── success ── */
             const fbNote = fb
                 ? `<br><span class="s-mute">(no ${mode} found — used ${fb} mode)</span>` : '';
             const retryNote = a > 0
@@ -889,25 +964,15 @@ async function go() {
             stat(`<span class="s-ok">✓ queued — ${label}</span>${fbNote}${retryNote}`);
             document.getElementById('q').value = '';
             queued = true;
-            winIdx = a;
 
-            /* ── save to watchlist for background monitoring ── */
+            /* save to watchlist */
             const jobId = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
             watchlist.set(jobId, {
-                query      : q,
-                mode       : fb || mode,
-                ws         : ws,
-                candidates : candidates,
-                attempt    : a,
-                user       : user,
-                filenames  : files.map(f => f.filename),
-                label      : label,
-                queuedAt   : Date.now(),
-                retries    : 0,
-                exhausted  : false,
-                retrying   : false
+                query: q, mode: fb || mode, ws, candidates,
+                attempt: a, user, filenames: files.map(f => f.filename),
+                label, queuedAt: Date.now(),
+                retries: 0, exhausted: false, retrying: false
             });
-
             break;
         }
 
@@ -915,7 +980,6 @@ async function go() {
             `all ${candidates.length} sources failed (${lastErr})`
         );
 
-        /* clean up search */
         fetch(`${CFG.API_BASE}/searches/${sid}`,
               { method: 'DELETE', headers: { 'X-API-Key': CFG.API_KEY } }).catch(() => {});
 
