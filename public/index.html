@@ -360,7 +360,7 @@
 
 <!-- ═══ LOGIN ════════════════════════════════════════════════════ -->
 <div id="auth" class="card auth-card" style="display:none">
-    <div class="card-label">log in to slskd</div>
+    <div class="card-label">log in with slskd credentials...</div>
     <input class="inp" type="text" id="user" placeholder="username"
            autocomplete="username"
            onkeydown="if(event.key==='Enter')document.getElementById('pass').focus()">
@@ -381,8 +381,8 @@
         <button class="tog"    onclick="setMode('track',this)">♫ track</button>
     </div>
     <div class="hint" id="hint">
-        downloads a complete album folder in the best available quality (prefers FLAC).<br>
-        try: <strong>pink floyd dark side of the moon</strong> · <strong>daft punk discovery</strong>
+        downloads a complete album folder.<br>
+        try: <strong>bob dylan blood on the tracks</strong>sunny day real estate diary<strong></strong>
     </div>
     <input class="inp" type="text" id="q"
            placeholder="artist album..."
@@ -413,7 +413,7 @@
 <script src="/config.js"></script>
 <script>
 /* ╔═══════════════════════════════════════════════════════════════════╗
-   ║  CONFIG                                                          ║
+   ║  CONFIG - Yes, you edit stuff here.                               ║
    ╚═══════════════════════════════════════════════════════════════════╝ */
 const CFG = {
     API_BASE    : (window.SLSKD_CONFIG && window.SLSKD_CONFIG.API_BASE) || '/api/v0',
@@ -577,13 +577,13 @@ function setMode(m, el) {
     const q = document.getElementById('q');
     if (m === 'album') {
         h.innerHTML =
-            'downloads a complete album folder in the best available quality (prefers FLAC).<br>' +
-            'try: <strong>pink floyd dark side of the moon</strong> · <strong>daft punk discovery</strong>';
+            'downloads a complete album folder in the best available quality.<br>' +
+            'try: <strong>bob dylan blood on the tracks</strong> · <strong>bob dylan blood on the tracks</strong>';
         q.placeholder = 'artist album...';
     } else {
         h.innerHTML =
             'finds the single best-quality file matching your search.<br>' +
-            'try: <strong>pink floyd comfortably numb</strong> · <strong>daft punk get lucky</strong>';
+            'try: <strong>grateful dead franklins tower</strong> · <strong>claude debussy reverie</strong>';
         q.placeholder = 'artist song...';
     }
 }
