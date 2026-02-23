@@ -8,415 +8,332 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        /* ═══════════════════════════════════════════════════════════
+           GRUVBOX PALETTE & DESIGN TOKENS
+           ═══════════════════════════════════════════════════════════ */
         :root {
-            --bg0h:     #1d2021;
-            --bg0:      #282828;
-            --bg1:      #3c3836;
-            --bg2:      #504945;
-            --bg3:      #665c54;
-            --bg4:      #7c6f64;
-            --fg:       #ebdbb2;
-            --fg2:      #d5c4a1;
-            --fg3:      #a89984;
-            --gray:     #928374;
-            --red:      #fb4934;
-            --green:    #b8bb26;
-            --yellow:   #fabd2f;
-            --blue:     #83a598;
-            --purple:   #d3869b;
-            --aqua:     #8ec07c;
-            --orange:   #fe8019;
-            --blue-d:   #458588;
-            --orange-d: #d65d0e;
-            --aqua-d:   #689d6a;
-            --radius:       10px;
-            --card-max:     660px;
-            --table-max:    840px;
-            --card-pad:     24px;
-            --card-gap:     18px;
-            --font:         'JetBrains Mono', monospace;
-            --speed:        0.25s;
-            --ease:         cubic-bezier(.4,0,.2,1);
-            --shadow-hover: 0 8px 28px rgba(0,0,0,0.4);
+            --bg0h:#1d2021;--bg0:#282828;--bg1:#3c3836;--bg2:#504945;
+            --bg3:#665c54;--bg4:#7c6f64;--fg:#ebdbb2;--fg2:#d5c4a1;
+            --fg3:#a89984;--gray:#928374;--red:#fb4934;--green:#b8bb26;
+            --yellow:#fabd2f;--blue:#83a598;--purple:#d3869b;--aqua:#8ec07c;
+            --orange:#fe8019;--blue-d:#458588;--orange-d:#d65d0e;--aqua-d:#689d6a;
+            --radius:10px;--card-max:660px;--table-max:840px;
+            --card-pad:24px;--card-gap:18px;
+            --font:'JetBrains Mono',monospace;
+            --speed:0.25s;--ease:cubic-bezier(.4,0,.2,1);
+            --shadow-hover:0 8px 28px rgba(0,0,0,0.4);
         }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            font-family: var(--font);
-            background: var(--bg0h);
-            color: var(--fg);
-            padding: 28px 16px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
-            -webkit-font-smoothing: antialiased;
-        }
-        @keyframes enter {
-            from { opacity: 0; transform: translateY(22px) scale(.97); }
-            to   { opacity: 1; transform: translateY(0)   scale(1); }
-        }
-        @keyframes fadeUp {
-            from { opacity: 0; transform: translateY(5px); }
-            to   { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes pulse {
-            0%,100% { opacity: 1; }
-            50%     { opacity: .32; }
-        }
-        @keyframes shimmer {
-            0%   { background-position: -200% 0; }
-            100% { background-position: 200% 0; }
-        }
-        .title {
-            color: var(--yellow);
-            font-size: 1.4rem;
-            font-weight: 700;
-            margin-bottom: 24px;
-            letter-spacing: -.5px;
-            animation: enter .55s var(--ease) both;
-        }
-        .card {
-            background: var(--bg1);
-            padding: var(--card-pad);
-            border-radius: var(--radius);
-            width: 100%;
-            max-width: var(--card-max);
-            border: 1px solid var(--bg2);
-            margin-bottom: var(--card-gap);
-            animation: enter .55s var(--ease) both;
-            transition:
-                border-color var(--speed) var(--ease),
-                box-shadow   var(--speed) var(--ease),
-                transform    var(--speed) var(--ease);
-            will-change: transform;
-        }
-        .card:hover {
-            border-color: var(--bg3);
-            box-shadow: var(--shadow-hover);
-            transform: translateY(-2px);
-        }
-        .card-label {
-            color: var(--aqua);
-            font-size: .9rem;
-            font-weight: 600;
-            margin-bottom: 16px;
-        }
-        .toggle {
-            display: flex;
-            border-radius: 8px;
-            overflow: hidden;
-            border: 1px solid var(--bg2);
-            margin-bottom: 10px;
-        }
-        .tog {
-            flex: 1;
-            padding: 10px 0;
-            border: none;
-            background: var(--bg2);
-            color: var(--fg3);
-            font: 500 .78rem var(--font);
-            cursor: pointer;
-            transition: all var(--speed) var(--ease);
-            position: relative;
-        }
-        .tog::after {
-            content: '';
-            position: absolute; bottom: 0; left: 50%; width: 0; height: 2px;
-            background: var(--orange);
-            transition: all var(--speed) var(--ease);
-            transform: translateX(-50%);
-        }
-        .tog:first-child { border-right: 1px solid var(--bg1); }
-        .tog.on { background: var(--orange-d); color: var(--bg0); font-weight: 700; }
-        .tog.on::after { width: 60%; }
-        .tog:hover:not(.on) { background: var(--bg3); color: var(--fg); }
-        .hint {
-            font-size: .62rem;
-            color: var(--gray);
-            line-height: 1.7;
-            margin-bottom: 12px;
-            transition: opacity .3s var(--ease);
-        }
-        .hint strong { color: var(--fg3); }
-        .inp {
-            width: 100%;
-            padding: 12px 14px;
-            border-radius: 8px;
-            border: 2px solid var(--bg2);
-            background: var(--bg0);
-            color: var(--fg);
-            font: .85rem var(--font);
-            margin-bottom: 12px;
-            outline: none;
-            transition:
-                border-color var(--speed) var(--ease),
-                box-shadow   var(--speed) var(--ease);
-        }
-        .inp::placeholder { color: var(--bg3); }
-        .inp:focus {
-            border-color: var(--blue);
-            box-shadow: 0 0 0 3px rgba(69,133,136,.18);
-        }
-        .btn {
-            width: 100%;
-            padding: 12px;
-            border: none;
-            border-radius: 8px;
-            background: var(--blue-d);
-            color: var(--fg);
-            font: 700 .85rem var(--font);
-            cursor: pointer;
-            letter-spacing: .4px;
-            transition: all .2s var(--ease);
-            position: relative;
-            overflow: hidden;
-        }
-        .btn::before {
-            content: '';
-            position: absolute; inset: 0;
-            background: linear-gradient(90deg,transparent,rgba(255,255,255,.06),transparent);
-            background-size: 200% 100%;
-            opacity: 0;
-            transition: opacity .3s;
-        }
-        .btn:hover:not(:disabled) {
-            background: var(--blue);
-            color: var(--bg0);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(69,133,136,.35);
-        }
-        .btn:hover:not(:disabled)::before {
-            opacity: 1;
-            animation: shimmer 1.5s infinite;
-        }
-        .btn:active:not(:disabled) { transform: translateY(0); box-shadow: none; }
-        .btn:disabled {
-            background: var(--bg2); color: var(--bg3);
-            cursor: not-allowed; transform: none;
-        }
-        #status { margin-top: 14px; min-height: 18px; font-size: .72rem; line-height: 1.7; word-break: break-word; }
-        .st      { display: inline-block; animation: fadeUp .28s var(--ease); }
-        .s-ok    { color: var(--green); }
-        .s-err   { color: var(--red); }
-        .s-load  { color: var(--orange); animation: pulse 1.6s ease-in-out infinite !important; }
-        .s-mute  { color: var(--gray); }
-        .scroll { overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; font-size: .7rem; }
-        th {
-            background: var(--bg2); color: var(--fg2);
-            padding: 9px 10px; text-align: left;
-            font-weight: 600; white-space: nowrap;
-        }
-        td {
-            padding: 7px 10px;
-            border-bottom: 1px solid var(--bg2);
-            max-width: 220px; overflow: hidden;
-            text-overflow: ellipsis; white-space: nowrap;
-            color: var(--fg2);
-        }
-        tbody tr { transition: background var(--speed) var(--ease); }
-        tbody tr:hover { background: rgba(80,73,69,.25); }
-        .bar-bg {
-            background: var(--bg2);
-            width: 100%; height: 5px;
-            border-radius: 3px;
-            overflow: hidden; margin-bottom: 3px;
-        }
-        .bar-fg {
-            height: 100%; width: 0%;
-            border-radius: 3px;
-            background: linear-gradient(90deg, var(--aqua-d), var(--aqua));
-            transition: width .7s var(--ease);
-        }
-        .empty { text-align: center; color: var(--bg3); font-style: italic; padding: 18px 10px !important; }
+        *{box-sizing:border-box;margin:0;padding:0}
+        body{font-family:var(--font);background:var(--bg0h);color:var(--fg);
+             padding:28px 16px;display:flex;flex-direction:column;align-items:center;
+             min-height:100vh;-webkit-font-smoothing:antialiased;overflow-x:hidden}
 
-        /* ── retry notifications ── */
-        .retry-bar {
-            background: var(--bg2);
-            border-radius: 8px;
-            padding: 9px 14px;
-            margin-top: 10px;
-            font-size: .68rem;
-            color: var(--fg3);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 10px;
-            animation: fadeUp .28s var(--ease);
-        }
-        .retry-bar .query { color: var(--fg2); font-weight: 600; }
-        .retry-bar .src   { color: var(--gray); }
-        .retry-btn {
-            font: 600 .62rem var(--font);
-            background: var(--orange-d);
-            color: var(--fg);
-            border: none;
-            border-radius: 5px;
-            padding: 5px 12px;
-            cursor: pointer;
-            transition: all .2s var(--ease);
-            white-space: nowrap;
-            flex-shrink: 0;
-        }
-        .retry-btn:hover {
-            background: var(--orange);
-            color: var(--bg0);
-            transform: translateY(-1px);
-            box-shadow: 0 3px 10px rgba(214,93,14,.3);
-        }
+        /* ═══ KEYFRAMES ═══════════════════════════════════════════ */
+        @keyframes enter{from{opacity:0;transform:translateY(22px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+        @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes pulse{0%,100%{opacity:1}50%{opacity:.32}}
+        @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+        @keyframes logoFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+        @keyframes glow{0%,100%{text-shadow:0 0 20px rgba(250,189,47,.25)}50%{text-shadow:0 0 40px rgba(250,189,47,.55),0 0 80px rgba(250,189,47,.15)}}
+        @keyframes orbFloat0{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(50px,70px) scale(1.08)}66%{transform:translate(-30px,40px) scale(.94)}}
+        @keyframes orbFloat1{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(-60px,-50px) scale(.95)}66%{transform:translate(40px,-80px) scale(1.06)}}
+        @keyframes orbFloat2{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(70px,-40px) scale(1.04)}66%{transform:translate(-50px,60px) scale(.92)}}
+        @keyframes orbFloat3{0%,100%{transform:translate(0,0) scale(1)}25%{transform:translate(-40px,50px) scale(1.06)}50%{transform:translate(30px,-30px) scale(.96)}75%{transform:translate(-20px,-60px) scale(1.02)}}
+        @keyframes orbFloat4{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(45px,55px) scale(.97)}66%{transform:translate(-55px,-35px) scale(1.05)}}
+        @keyframes orbFloat5{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(-30px,-70px) scale(1.1)}66%{transform:translate(60px,30px) scale(.93)}}
+        @keyframes splashExit{to{opacity:0;transform:scale(1.06)}}
+        @keyframes chipIn{from{opacity:0;transform:scale(.85)}to{opacity:1;transform:scale(1)}}
 
-        /* ── cat filter button ── */
-        .dl-head {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 16px;
-        }
-        .dl-head .card-label { margin-bottom: 0; }
-        .cat-btn {
-            background: none;
-            border: 1px solid transparent;
-            color: var(--gray);
-            font-size: 1.15rem;
-            padding: 4px 8px;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all .3s var(--ease);
-            line-height: 1;
-        }
-        .cat-btn:hover {
-            color: var(--yellow);
-            transform: scale(1.25) rotate(-10deg);
-        }
-        .cat-btn.on {
-            color: var(--orange);
-            background: rgba(214,93,14,.15);
-            border-color: var(--orange-d);
-        }
-        .cat-btn.on:hover { color: var(--yellow); }
+        /* ═══ SPLASH / LOGIN SCREEN ══════════════════════════════ */
+        .splash{position:fixed;inset:0;z-index:200;background:var(--bg0h);
+                display:flex;align-items:center;justify-content:center;overflow:hidden}
+        .splash.exit{animation:splashExit .65s var(--ease) forwards;pointer-events:none}
+        .splash.gone{display:none}
+        .splash-bg{position:absolute;inset:0;overflow:hidden}
+        .orb{position:absolute;border-radius:50%;filter:blur(80px);opacity:.1;will-change:transform}
+        .orb-0{width:340px;height:340px;background:var(--yellow);top:-8%;left:-6%;animation:orbFloat0 26s ease-in-out infinite}
+        .orb-1{width:260px;height:260px;background:var(--blue);bottom:-6%;right:-5%;animation:orbFloat1 30s ease-in-out infinite 2s}
+        .orb-2{width:280px;height:280px;background:var(--purple);bottom:18%;right:15%;animation:orbFloat2 22s ease-in-out infinite 1s}
+        .orb-3{width:200px;height:200px;background:var(--aqua);top:30%;left:12%;animation:orbFloat3 28s ease-in-out infinite 3s}
+        .orb-4{width:230px;height:230px;background:var(--orange);bottom:25%;left:5%;animation:orbFloat4 24s ease-in-out infinite 1.5s}
+        .orb-5{width:170px;height:170px;background:var(--red);top:8%;right:20%;animation:orbFloat5 32s ease-in-out infinite 4s}
+        .splash-inner{position:relative;z-index:1;text-align:center;width:100%;max-width:380px;padding:0 20px}
+        .splash-logo{font-size:5rem;line-height:1.1;color:var(--yellow);
+                     animation:logoFloat 4s ease-in-out infinite,glow 3s ease-in-out infinite,fadeUp .9s var(--ease) both;
+                     margin-bottom:6px;user-select:none}
+        .splash-title{font-size:1.6rem;font-weight:700;letter-spacing:-.8px;color:var(--fg);
+                      animation:fadeUp .7s var(--ease) .25s both;margin-bottom:36px;opacity:0}
+        .splash-form{opacity:0;pointer-events:none;transition:opacity .4s var(--ease)}
+        .splash-form.visible{opacity:1;pointer-events:auto}
+        .splash-field{animation:fadeUp .45s var(--ease) both;opacity:0}
+        .splash-form.visible .splash-field:nth-child(1){animation-delay:.1s}
+        .splash-form.visible .splash-field:nth-child(2){animation-delay:.22s}
+        .splash-form.visible .splash-field:nth-child(3){animation-delay:.34s}
+        .splash-form.visible .splash-field:nth-child(4){animation-delay:.46s}
+        .splash-form.visible .splash-field:nth-child(5){animation-delay:.58s}
+        .splash-hint{font-size:.58rem;color:var(--bg4);margin-bottom:12px}
 
-        /* ── pagination ── */
-        .pager {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 8px;
-            padding-top: 12px;
-        }
-        .pg-btn {
-            background: var(--bg2);
-            border: none;
-            color: var(--fg3);
-            font: 600 .72rem var(--font);
-            padding: 4px 11px;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: all .15s var(--ease);
-        }
-        .pg-btn:hover:not(:disabled) { background: var(--bg3); color: var(--fg); }
-        .pg-btn:disabled { opacity: .2; cursor: default; }
-        .pg-info { font-size: .62rem; color: var(--fg3); min-width: 50px; text-align: center; }
-        .pg-note { font-size: .58rem; color: var(--bg4); margin-left: 6px; }
+        /* ═══ MAIN APP WRAPPER ═══════════════════════════════════ */
+        .main-wrap{display:flex;flex-direction:column;align-items:center;width:100%;
+                   opacity:0;transform:translateY(16px);
+                   transition:opacity .55s var(--ease) .15s,transform .55s var(--ease) .15s;
+                   pointer-events:none}
+        .main-wrap.active{opacity:1;transform:translateY(0);pointer-events:auto}
 
-        /* ── auth ── */
-        .auth-card { max-width: 380px; }
-        .logout-btn {
-            position: absolute;
-            top: 28px;
-            right: 28px;
-            font: 500 .6rem var(--font);
-            color: var(--bg4);
-            background: none;
-            border: none;
-            cursor: pointer;
-            padding: 4px 8px;
-            border-radius: 4px;
-            letter-spacing: .3px;
-            transition: all .2s var(--ease);
-        }
-        .logout-btn:hover { color: var(--red); background: rgba(251,73,52,.08); }
+        /* ═══ EXISTING COMPONENT STYLES ══════════════════════════ */
+        .title{color:var(--yellow);font-size:1.4rem;font-weight:700;margin-bottom:24px;
+               letter-spacing:-.5px;animation:enter .55s var(--ease) both}
+        .card{background:var(--bg1);padding:var(--card-pad);border-radius:var(--radius);
+              width:100%;max-width:var(--card-max);border:1px solid var(--bg2);
+              margin-bottom:var(--card-gap);animation:enter .55s var(--ease) both;
+              transition:border-color var(--speed) var(--ease),box-shadow var(--speed) var(--ease),
+              transform var(--speed) var(--ease);will-change:transform}
+        .card:hover{border-color:var(--bg3);box-shadow:var(--shadow-hover);transform:translateY(-2px)}
+        .card-label{color:var(--aqua);font-size:.9rem;font-weight:600;margin-bottom:16px}
+        .toggle{display:flex;border-radius:8px;overflow:hidden;border:1px solid var(--bg2);margin-bottom:10px}
+        .tog{flex:1;padding:10px 0;border:none;background:var(--bg2);color:var(--fg3);
+             font:500 .78rem var(--font);cursor:pointer;transition:all var(--speed) var(--ease);position:relative}
+        .tog::after{content:'';position:absolute;bottom:0;left:50%;width:0;height:2px;background:var(--orange);
+                    transition:all var(--speed) var(--ease);transform:translateX(-50%)}
+        .tog:first-child{border-right:1px solid var(--bg1)}
+        .tog.on{background:var(--orange-d);color:var(--bg0);font-weight:700}
+        .tog.on::after{width:60%}
+        .tog:hover:not(.on){background:var(--bg3);color:var(--fg)}
+        .hint{font-size:.62rem;color:var(--gray);line-height:1.7;margin-bottom:12px;transition:opacity .3s var(--ease)}
+        .hint strong{color:var(--fg3)}
+        .inp{width:100%;padding:12px 14px;border-radius:8px;border:2px solid var(--bg2);
+             background:var(--bg0);color:var(--fg);font:.85rem var(--font);margin-bottom:12px;
+             outline:none;transition:border-color var(--speed) var(--ease),box-shadow var(--speed) var(--ease)}
+        .inp::placeholder{color:var(--bg3)}
+        .inp:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(69,133,136,.18)}
+        .btn{width:100%;padding:12px;border:none;border-radius:8px;background:var(--blue-d);
+             color:var(--fg);font:700 .85rem var(--font);cursor:pointer;letter-spacing:.4px;
+             transition:all .2s var(--ease);position:relative;overflow:hidden}
+        .btn::before{content:'';position:absolute;inset:0;
+             background:linear-gradient(90deg,transparent,rgba(255,255,255,.06),transparent);
+             background-size:200% 100%;opacity:0;transition:opacity .3s}
+        .btn:hover:not(:disabled){background:var(--blue);color:var(--bg0);transform:translateY(-2px);
+             box-shadow:0 6px 20px rgba(69,133,136,.35)}
+        .btn:hover:not(:disabled)::before{opacity:1;animation:shimmer 1.5s infinite}
+        .btn:active:not(:disabled){transform:translateY(0);box-shadow:none}
+        .btn:disabled{background:var(--bg2);color:var(--bg3);cursor:not-allowed;transform:none}
 
-        #app {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            width: 100%;
-        }
+        #status{margin-top:14px;min-height:18px;font-size:.72rem;line-height:1.7;word-break:break-word}
+        .st{display:inline-block;animation:fadeUp .28s var(--ease)}
+        .s-ok{color:var(--green)}.s-err{color:var(--red)}
+        .s-load{color:var(--orange);animation:pulse 1.6s ease-in-out infinite !important}
+        .s-mute{color:var(--gray)}
 
-        @media (max-width:520px) {
-            body { padding: 14px 6px; }
-            .card { padding: 16px; }
-            td,th { padding: 5px 6px; font-size: .64rem; }
-            td { max-width: 110px; }
-            .retry-bar { flex-direction: column; align-items: flex-start; gap: 6px; }
-            .logout-btn { top: 10px; right: 10px; }
+        .scroll{overflow-x:auto}
+        table{width:100%;border-collapse:collapse;font-size:.7rem}
+        th{background:var(--bg2);color:var(--fg2);padding:9px 10px;text-align:left;font-weight:600;white-space:nowrap}
+        td{padding:7px 10px;border-bottom:1px solid var(--bg2);color:var(--fg2);white-space:nowrap}
+        tbody tr{transition:background var(--speed) var(--ease)}
+        tbody tr:hover{background:rgba(80,73,69,.25)}
+        .bar-bg{background:var(--bg2);width:100%;height:5px;border-radius:3px;overflow:hidden;margin-bottom:3px}
+        .bar-fg{height:100%;width:0%;border-radius:3px;background:linear-gradient(90deg,var(--aqua-d),var(--aqua));
+                transition:width .7s var(--ease)}
+        .empty{text-align:center;color:var(--bg3);font-style:italic;padding:18px 10px !important}
+
+        /* ═══ FILE CELL WITH ARTWORK ═════════════════════════════ */
+        .file-cell{display:flex;align-items:center;gap:8px;min-width:0;max-width:280px}
+        .art-thumb{width:34px;height:34px;border-radius:5px;object-fit:cover;flex-shrink:0;
+                   background:var(--bg2);transition:opacity .3s var(--ease)}
+        .art-ph{width:34px;height:34px;border-radius:5px;background:var(--bg2);display:flex;
+                align-items:center;justify-content:center;flex-shrink:0;color:var(--bg4);font-size:.65rem}
+        .file-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+        /* ═══ QUEUE STAGING AREA ═════════════════════════════════ */
+        .input-row{display:flex;gap:8px;margin-bottom:12px}
+        .input-row .inp{flex:1;margin-bottom:0}
+        .add-btn{width:44px;flex-shrink:0;border:2px solid var(--bg2);border-radius:8px;
+                 background:var(--bg0);color:var(--aqua);font:700 1.2rem var(--font);cursor:pointer;
+                 transition:all .2s var(--ease);display:flex;align-items:center;justify-content:center}
+        .add-btn:hover{border-color:var(--aqua);background:rgba(142,192,124,.08);transform:scale(1.06)}
+        .add-btn:active{transform:scale(.95)}
+        .queue-area{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;max-height:140px;overflow-y:auto;
+                    padding:2px 0}
+        .queue-area:empty{display:none;margin:0;padding:0}
+        .chip{display:inline-flex;align-items:center;gap:5px;background:var(--bg2);border:1px solid var(--bg3);
+              border-radius:20px;padding:5px 8px 5px 12px;font-size:.68rem;color:var(--fg2);
+              animation:chipIn .2s var(--ease);max-width:260px;transition:border-color .15s var(--ease)}
+        .chip:hover{border-color:var(--fg3)}
+        .chip-text{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+        .chip-x{background:none;border:none;color:var(--fg3);cursor:pointer;font-size:.8rem;
+                padding:2px 4px;border-radius:50%;transition:all .15s var(--ease);line-height:1}
+        .chip-x:hover{color:var(--red);background:rgba(251,73,52,.12)}
+        .queue-count{font-size:.58rem;color:var(--gray);margin-bottom:8px;animation:fadeUp .2s var(--ease)}
+
+        /* ═══ RETRIES ════════════════════════════════════════════ */
+        .retry-bar{background:var(--bg2);border-radius:8px;padding:9px 14px;margin-top:10px;
+                   font-size:.68rem;color:var(--fg3);display:flex;align-items:center;
+                   justify-content:space-between;gap:10px;animation:fadeUp .28s var(--ease)}
+        .retry-bar .query{color:var(--fg2);font-weight:600}
+        .retry-bar .src{color:var(--gray)}
+        .retry-btn{font:600 .62rem var(--font);background:var(--orange-d);color:var(--fg);
+                   border:none;border-radius:5px;padding:5px 12px;cursor:pointer;
+                   transition:all .2s var(--ease);white-space:nowrap;flex-shrink:0}
+        .retry-btn:hover{background:var(--orange);color:var(--bg0);transform:translateY(-1px);
+                         box-shadow:0 3px 10px rgba(214,93,14,.3)}
+
+        /* ═══ DOWNLOAD HEADER & FILTER ═══════════════════════════ */
+        .dl-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+        .dl-head .card-label{margin-bottom:0}
+        .cat-btn{background:none;border:1px solid transparent;color:var(--gray);font-size:1.15rem;
+                 padding:4px 8px;border-radius:6px;cursor:pointer;transition:all .3s var(--ease);line-height:1}
+        .cat-btn:hover{color:var(--yellow);transform:scale(1.25) rotate(-10deg)}
+        .cat-btn.on{color:var(--orange);background:rgba(214,93,14,.15);border-color:var(--orange-d)}
+        .cat-btn.on:hover{color:var(--yellow)}
+
+        /* ═══ PAGINATION ═════════════════════════════════════════ */
+        .pager{display:flex;justify-content:center;align-items:center;gap:8px;padding-top:12px}
+        .pg-btn{background:var(--bg2);border:none;color:var(--fg3);font:600 .72rem var(--font);
+                padding:4px 11px;border-radius:5px;cursor:pointer;transition:all .15s var(--ease)}
+        .pg-btn:hover:not(:disabled){background:var(--bg3);color:var(--fg)}
+        .pg-btn:disabled{opacity:.2;cursor:default}
+        .pg-info{font-size:.62rem;color:var(--fg3);min-width:50px;text-align:center}
+        .pg-note{font-size:.58rem;color:var(--bg4);margin-left:6px}
+
+        /* ═══ LOGOUT ═════════════════════════════════════════════ */
+        .logout-btn{position:absolute;top:28px;right:28px;font:500 .6rem var(--font);color:var(--bg4);
+                    background:none;border:none;cursor:pointer;padding:4px 8px;border-radius:4px;
+                    letter-spacing:.3px;transition:all .2s var(--ease)}
+        .logout-btn:hover{color:var(--red);background:rgba(251,73,52,.08)}
+        #app{display:flex;flex-direction:column;align-items:center;width:100%}
+
+        /* ═══ RESPONSIVE ═════════════════════════════════════════ */
+        @media(max-width:768px){
+            .orb{filter:blur(60px);opacity:.07}
+            .splash-logo{font-size:4rem}
+            .splash-title{font-size:1.3rem}
+        }
+        @media(max-width:520px){
+            body{padding:14px 6px}
+            .card{padding:16px}
+            td,th{padding:5px 6px;font-size:.64rem}
+            .file-cell{max-width:150px;gap:5px}
+            .art-thumb,.art-ph{width:24px;height:24px;border-radius:3px}
+            .art-ph{font-size:.5rem}
+            .retry-bar{flex-direction:column;align-items:flex-start;gap:6px}
+            .logout-btn{top:10px;right:10px}
+            .splash-logo{font-size:3.5rem}
+            .splash-title{font-size:1.1rem;margin-bottom:28px}
+            .splash-inner{padding:0 12px}
+            .chip{max-width:200px;font-size:.62rem}
+            .input-row{gap:6px}
+            .add-btn{width:38px;font-size:1rem}
+            .queue-area{max-height:100px}
         }
     </style>
 </head>
 <body>
 
-<h1 class="title"> 𓅪 slskdquestrr </h1>
-<button id="logoutBtn" class="logout-btn" onclick="logout()" style="display:none">logout</button>
-
-<!-- ═══ LOGIN ════════════════════════════════════════════════════ -->
-<div id="auth" class="card auth-card" style="display:none">
-    <div class="card-label">log in with slskd credentials...</div>
-    <input class="inp" type="text" id="user" placeholder="username"
-           autocomplete="username"
-           onkeydown="if(event.key==='Enter')document.getElementById('pass').focus()">
-    <input class="inp" type="password" id="pass" placeholder="password"
-           autocomplete="current-password"
-           onkeydown="if(event.key==='Enter')login()">
-    <button class="btn" id="loginBtn" onclick="login()">log in</button>
-    <div id="authMsg" style="margin-top:12px;min-height:18px;font-size:.72rem"></div>
+<!-- ═══════════════════════════════════════════════════════════════
+     SPLASH / LOGIN SCREEN — animated gatekeeper
+     ═══════════════════════════════════════════════════════════════ -->
+<div id="splash" class="splash">
+    <div class="splash-bg">
+        <div class="orb orb-0"></div>
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+        <div class="orb orb-4"></div>
+        <div class="orb orb-5"></div>
+    </div>
+    <div class="splash-inner">
+        <div class="splash-logo">𓅪</div>
+        <div class="splash-title">slskdquestrr</div>
+        <div id="splashForm" class="splash-form">
+            <div class="splash-field">
+                <div class="splash-hint">server url (leave blank for default)</div>
+                <input class="inp" type="text" id="splashServer" placeholder="/api/v0"
+                       autocomplete="url">
+            </div>
+            <div class="splash-field">
+                <input class="inp" type="text" id="splashUser" placeholder="username"
+                       autocomplete="username"
+                       onkeydown="if(event.key==='Enter')document.getElementById('splashPass').focus()">
+            </div>
+            <div class="splash-field">
+                <input class="inp" type="password" id="splashPass" placeholder="password"
+                       autocomplete="current-password"
+                       onkeydown="if(event.key==='Enter')splashLogin()">
+            </div>
+            <div class="splash-field">
+                <button class="btn" id="splashLoginBtn" onclick="splashLogin()">log in</button>
+            </div>
+            <div class="splash-field">
+                <div id="splashMsg" style="min-height:18px;font-size:.72rem;margin-top:4px;text-align:center"></div>
+            </div>
+        </div>
+    </div>
 </div>
 
-<!-- ═══ APP ═════════════════════════════════════════════════════ -->
-<div id="app" style="display:none">
+<!-- ═══════════════════════════════════════════════════════════════
+     MAIN APPLICATION
+     ═══════════════════════════════════════════════════════════════ -->
+<div id="mainWrap" class="main-wrap">
+    <h1 class="title"> 𓅪 slskdquestrr </h1>
+    <button id="logoutBtn" class="logout-btn" onclick="logout()" style="display:none">logout</button>
 
-<div class="card">
-    <div class="card-label">search & download</div>
-    <div class="toggle">
-        <button class="tog on" onclick="setMode('album',this)">⊞ album</button>
-        <button class="tog"    onclick="setMode('track',this)">♫ track</button>
+    <div id="app">
+        <!-- ── search & download card ── -->
+        <div class="card">
+            <div class="card-label">search & download</div>
+            <div class="toggle">
+                <button class="tog on" onclick="setMode('album',this)">⊞ album</button>
+                <button class="tog"    onclick="setMode('track',this)">♫ track</button>
+            </div>
+            <div class="hint" id="hint">
+                downloads a complete album folder in the best available quality.<br>
+                try: <strong>bob dylan blood on the tracks</strong> · <strong>nick drake pink moon</strong>
+            </div>
+            <div class="input-row">
+                <input class="inp" type="text" id="q"
+                       placeholder="artist album..."
+                       autocomplete="off"
+                       oninput="updateGoBtn()"
+                       onkeydown="handleQKey(event)">
+                <button class="add-btn" onclick="addToQueue()" title="Add to queue (comma-separated ok)">+</button>
+            </div>
+            <div id="queueChips" class="queue-area"></div>
+            <div id="queueCount" class="queue-count" style="display:none"></div>
+            <button class="btn" id="goBtn" onclick="go()">search & download</button>
+            <div id="status"><span class="st s-mute">ready.</span></div>
+        </div>
+
+        <!-- ── downloads card ── -->
+        <div class="card" style="max-width:var(--table-max)">
+            <div class="dl-head">
+                <div class="card-label">downloads</div>
+                <button class="cat-btn" onclick="toggleFilter()" title="hide completed — show active only">𓃠</button>
+            </div>
+            <div class="scroll">
+                <table>
+                    <thead><tr><th>file</th><th>user</th><th>progress</th><th>state</th></tr></thead>
+                    <tbody id="dl"><tr><td colspan="4" class="empty">nothing yet.</td></tr></tbody>
+                </table>
+            </div>
+            <div id="pager" class="pager"></div>
+            <div id="retries"></div>
+        </div>
     </div>
-    <div class="hint" id="hint">
-        downloads a complete album folder in the best available quality.<br>
-        try: <strong>bob dylan blood on the tracks</strong> · <strong>nick drake pink moon</strong></strong>
-    </div>
-    <input class="inp" type="text" id="q"
-           placeholder="artist album..."
-           autocomplete="off"
-           onkeydown="if(event.key==='Enter')go()">
-    <button class="btn" id="goBtn" onclick="go()">search & download</button>
-    <div id="status"><span class="st s-mute">ready.</span></div>
 </div>
-
-<div class="card" style="max-width:var(--table-max)">
-    <div class="dl-head">
-        <div class="card-label">downloads</div>
-        <button class="cat-btn" onclick="toggleFilter()" title="hide completed — show active only">𓃠</button>
-    </div>
-    <div class="scroll">
-        <table>
-            <thead><tr><th>file</th><th>user</th><th>progress</th><th>state</th></tr></thead>
-            <tbody id="dl"><tr><td colspan="4" class="empty">nothing yet.</td></tr></tbody>
-        </table>
-    </div>
-    <div id="pager" class="pager"></div>
-    <div id="retries"></div>
-</div>
-
-</div><!-- /app -->
 
 <!-- ═══════════════════════════════════════════════════════════════ -->
 <script src="/config.js"></script>
 <script>
 /* ╔═══════════════════════════════════════════════════════════════════╗
-   ║  CONFIG - Yes, you edit stuff here.                               ║
+   ║  CONFIG                                                          ║
    ╚═══════════════════════════════════════════════════════════════════╝ */
+function getApiBase() {
+    const stored = localStorage.getItem('slskd_server');
+    if (stored) return stored;
+    return (window.SLSKD_CONFIG && window.SLSKD_CONFIG.API_BASE) || '/api/v0';
+}
+
 const CFG = {
-    API_BASE    : (window.SLSKD_CONFIG && window.SLSKD_CONFIG.API_BASE) || '/api/v0',
+    API_BASE    : getApiBase(),
     POLLS       : 24,
     DELAY       : 2500,
     MIN_TRACKS  : 4,
@@ -448,7 +365,7 @@ const CFG = {
     WATCH_MAX   : 3,
     WATCH_POLL  : 10000,
     MON_MS      : 2500,
-    PER_PAGE    : 15
+    PER_PAGE    : 10          /* ← reduced from 15 to 10 for cleaner UI */
 };
 
 /* ── constants & state ── */
@@ -463,107 +380,149 @@ let monTimer    = null;
 const watchlist = new Map();
 let lastWatch   = 0;
 
+/* ── multi-queue state ── */
+let queueItems  = [];
 
-/* ══════════════════ AUTH ══════════════════════════════════════ */
+/* ── artwork cache: key→url|null|'pending' ── */
+const artCache     = new Map();
+const artFetchQ    = [];
+let   artFetching  = false;
+
+
+/* ══════════════════ SPLASH / AUTH ════════════════════════════ */
 
 function tokenExpired(t) {
-    try {
-        const { exp } = JSON.parse(atob(t.split('.')[1]));
-        return exp ? exp * 1000 < Date.now() : false;
-    } catch { return true; }
+    try { const {exp}=JSON.parse(atob(t.split('.')[1])); return exp?exp*1000<Date.now():false }
+    catch { return true }
 }
 
+/** Authenticated fetch — auto-detects expired session */
 async function apiFetch(url, opts = {}) {
     const token = localStorage.getItem('slskd_token');
-    if (!token) { showLogin(); throw new Error('not authenticated'); }
+    if (!token) { showSplash(); throw new Error('not authenticated'); }
     opts.headers = { 'Authorization': `Bearer ${token}`, ...(opts.headers || {}) };
     const r = await fetch(url, opts);
     if (r.status === 401) {
         localStorage.removeItem('slskd_token');
-        showLogin();
+        showSplash();
         throw new Error('session expired — please log in again');
     }
     return r;
 }
 
-function showLogin() {
-    document.getElementById('auth').style.display = '';
-    document.getElementById('app').style.display = 'none';
-    document.getElementById('logoutBtn').style.display = 'none';
-    if (monTimer) { clearInterval(monTimer); monTimer = null; }
-    setTimeout(() => document.getElementById('user')?.focus(), 100);
+/** Build full API base from a user-entered server URL */
+function buildApiBase(server) {
+    if (!server || server === '/') return '/api/v0';
+    server = server.replace(/\/+$/, '');
+    if (server.endsWith('/api/v0')) return server;
+    if (server.endsWith('/api'))    return server + '/v0';
+    return server + '/api/v0';
 }
 
-function showApp() {
-    document.getElementById('auth').style.display = 'none';
-    document.getElementById('app').style.display = '';
+/** Show the splash login form */
+function showSplash() {
+    const splash = document.getElementById('splash');
+    const wrap   = document.getElementById('mainWrap');
+    if (monTimer) { clearInterval(monTimer); monTimer = null; }
+    wrap.classList.remove('active');
+    document.getElementById('logoutBtn').style.display = 'none';
+    splash.classList.remove('exit', 'gone');
+    splash.style.display = '';
+    const form = document.getElementById('splashForm');
+    /* Small delay so the CSS animation re-triggers */
+    requestAnimationFrame(() => {
+        form.classList.add('visible');
+        setTimeout(() => document.getElementById('splashUser')?.focus(), 500);
+    });
+}
+
+/** Animate splash away and reveal main app */
+function transitionToApp() {
+    const splash = document.getElementById('splash');
+    const wrap   = document.getElementById('mainWrap');
+    splash.classList.add('exit');
+    setTimeout(() => wrap.classList.add('active'), 180);
+    setTimeout(() => { splash.classList.add('gone'); splash.style.display = 'none'; }, 700);
     document.getElementById('logoutBtn').style.display = '';
     if (!monTimer) monTimer = setInterval(mon, CFG.MON_MS);
     mon();
 }
 
-async function login() {
-    const userInp = document.getElementById('user');
-    const passInp = document.getElementById('pass');
-    const msgEl   = document.getElementById('authMsg');
-    const btn     = document.getElementById('loginBtn');
+/** Login handler (called from splash screen) */
+async function splashLogin() {
+    const serverInp = document.getElementById('splashServer');
+    const userInp   = document.getElementById('splashUser');
+    const passInp   = document.getElementById('splashPass');
+    const msgEl     = document.getElementById('splashMsg');
+    const btn       = document.getElementById('splashLoginBtn');
 
-    const username = userInp.value.trim();
-    const password = passInp.value;
+    const serverRaw = serverInp.value.trim();
+    const username  = userInp.value.trim();
+    const password  = passInp.value;
 
     if (!username || !password) {
         msgEl.innerHTML = '<span class="s-err">enter username and password</span>';
         return;
     }
 
+    /* Resolve API base from user input */
+    const apiBase = serverRaw ? buildApiBase(serverRaw) : getApiBase();
+
     btn.disabled = true;
     msgEl.innerHTML = '<span class="s-load">logging in…</span>';
 
     try {
-        const r = await fetch(`${CFG.API_BASE}/session`, {
+        const r = await fetch(`${apiBase}/session`, {
             method : 'POST',
             headers: { 'Content-Type': 'application/json' },
             body   : JSON.stringify({ username, password })
         });
-
         if (r.ok) {
             const data = await r.json();
             if (data.token) {
                 localStorage.setItem('slskd_token', data.token);
+                if (serverRaw) localStorage.setItem('slskd_server', apiBase);
+                else localStorage.removeItem('slskd_server');
+                CFG.API_BASE = apiBase;
                 passInp.value = '';
                 msgEl.innerHTML = '';
-                showApp();
+                transitionToApp();
                 return;
             }
         }
-
-        msgEl.innerHTML = (r.status === 401 || r.status === 403)
+        msgEl.innerHTML = (r.status===401||r.status===403)
             ? '<span class="s-err">invalid username or password</span>'
             : `<span class="s-err">login failed (${r.status})</span>`;
     } catch {
-        msgEl.innerHTML = '<span class="s-err">cannot reach slskd — is it running?</span>';
-    } finally {
-        btn.disabled = false;
-    }
+        msgEl.innerHTML = '<span class="s-err">cannot reach slskd — check url / is it running?</span>';
+    } finally { btn.disabled = false; }
 }
 
 function logout() {
     localStorage.removeItem('slskd_token');
-    showLogin();
+    localStorage.removeItem('slskd_server');
+    showSplash();
 }
 
+/** Boot sequence */
 async function init() {
     const token = localStorage.getItem('slskd_token');
     if (token && !tokenExpired(token)) {
+        const apiBase = getApiBase();
+        CFG.API_BASE = apiBase;
         try {
-            const r = await fetch(`${CFG.API_BASE}/session`, {
+            const r = await fetch(`${apiBase}/session`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
-            if (r.ok) { showApp(); return; }
-        } catch { /* slskd unreachable — fall through to login */ }
+            if (r.ok) {
+                /* Valid session — brief splash then reveal app */
+                setTimeout(transitionToApp, 850);
+                return;
+            }
+        } catch { /* unreachable — fall through */ }
     }
     localStorage.removeItem('slskd_token');
-    showLogin();
+    showSplash();
 }
 
 
@@ -576,13 +535,11 @@ function setMode(m, el) {
     const h = document.getElementById('hint');
     const q = document.getElementById('q');
     if (m === 'album') {
-        h.innerHTML =
-            'downloads a complete album folder in the best available quality.<br>' +
+        h.innerHTML = 'downloads a complete album folder in the best available quality.<br>' +
             'try: <strong>bob dylan blood on the tracks</strong> · <strong>nick drake pink moon</strong>';
         q.placeholder = 'artist album...';
     } else {
-        h.innerHTML =
-            'finds the single best-quality file matching your search.<br>' +
+        h.innerHTML = 'finds the single best-quality file matching your search.<br>' +
             'try: <strong>grateful dead franklins tower</strong> · <strong>claude debussy reverie</strong>';
         q.placeholder = 'artist song...';
     }
@@ -590,29 +547,142 @@ function setMode(m, el) {
 
 function stat(html) { document.getElementById('status').innerHTML = `<span class="st">${html}</span>`; }
 function tail(p) { return p.split('\\').pop(); }
-function esc(s) { return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]); }
-function toggleFilter() { showActive = !showActive; document.querySelector('.cat-btn').classList.toggle('on', showActive); dlPage = 1; mon(); }
-function dlPg(d) { dlPage += d; mon(); }
+function esc(s) { return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]); }
+function toggleFilter() { showActive=!showActive; document.querySelector('.cat-btn').classList.toggle('on',showActive); dlPage=1; mon(); }
+function dlPg(d) { dlPage+=d; mon(); }
+
+
+/* ══════════════════ MULTI-QUEUE SYSTEM ════════════════════════ */
+
+/** Add current input text (comma/newline separated) to the staging queue */
+function addToQueue() {
+    const raw = document.getElementById('q').value.trim();
+    if (!raw) return;
+    const items = raw.split(/[,\n]/).map(s => s.trim()).filter(Boolean);
+    for (const item of items) {
+        if (!queueItems.some(q => q.toLowerCase() === item.toLowerCase())) {
+            queueItems.push(item);
+        }
+    }
+    document.getElementById('q').value = '';
+    renderQueue();
+    updateGoBtn();
+    document.getElementById('q').focus();
+}
+
+function removeFromQueue(idx) {
+    queueItems.splice(idx, 1);
+    renderQueue();
+    updateGoBtn();
+}
+
+function renderQueue() {
+    const el = document.getElementById('queueChips');
+    const ct = document.getElementById('queueCount');
+    if (!queueItems.length) {
+        el.innerHTML = '';
+        ct.style.display = 'none';
+        return;
+    }
+    el.innerHTML = queueItems.map((item, i) =>
+        `<div class="chip"><span class="chip-text">${esc(item)}</span>` +
+        `<button class="chip-x" onclick="removeFromQueue(${i})" title="Remove">×</button></div>`
+    ).join('');
+    ct.textContent = `${queueItems.length} item${queueItems.length>1?'s':''} in queue`;
+    ct.style.display = '';
+}
+
+function updateGoBtn() {
+    const btn = document.getElementById('goBtn');
+    const n   = queueItems.length;
+    const has = document.getElementById('q').value.trim().length > 0;
+    if (n > 0) btn.textContent = `search & download (${n}${has ? '+1' : ''})`;
+    else btn.textContent = 'search & download';
+}
+
+/** Keyboard handler for the search input */
+function handleQKey(e) {
+    if (e.key === 'Enter') {
+        if (e.ctrlKey || e.shiftKey) {
+            /* Ctrl/Shift + Enter → add to queue without searching */
+            e.preventDefault();
+            addToQueue();
+        } else {
+            /* Plain Enter → execute search (same as clicking the button) */
+            go();
+        }
+    }
+}
+
+
+/* ══════════════════ ARTWORK FETCHER (iTunes) ════════════════ */
+
+/** Extract a search key from a file path (artist + album directory) */
+function artKey(filename) {
+    const parts = filename.replace(/\//g,'\\').split('\\').filter(Boolean);
+    if (parts.length < 2) return '';
+    parts.pop(); /* remove filename */
+    const album  = parts.pop() || '';
+    const artist = parts.pop() || '';
+    const q = (artist + ' ' + album)
+        .replace(/[\[\](){}_\-]+/g,' ')
+        .replace(/\s+/g,' ').trim();
+    return q.length >= 3 ? q : '';
+}
+
+/** Build artwork HTML for a table cell (sync — uses cache) */
+function artHtml(filename) {
+    const key = artKey(filename);
+    if (!key) return '<div class="art-ph">♪</div>';
+    const cached = artCache.get(key);
+    if (cached && cached !== 'pending') {
+        return `<img class="art-thumb" src="${cached}" alt="" loading="lazy" ` +
+               `onerror="this.outerHTML='<div class=\\'art-ph\\'>♪</div>'">`;
+    }
+    /* Queue fetch if not yet requested */
+    if (!artCache.has(key)) {
+        artCache.set(key, 'pending');
+        artFetchQ.push(key);
+        scheduleArtFetch();
+    }
+    return '<div class="art-ph">♪</div>';
+}
+
+/** Process the artwork fetch queue one at a time */
+function scheduleArtFetch() {
+    if (artFetching) return;
+    artFetching = true;
+    (async () => {
+        while (artFetchQ.length) {
+            const key = artFetchQ.shift();
+            if (artCache.get(key) !== 'pending') continue;
+            try {
+                const url = 'https://itunes.apple.com/search?term=' +
+                    encodeURIComponent(key) + '&media=music&entity=album&limit=1';
+                const r    = await fetch(url);
+                const data = await r.json();
+                let art = null;
+                if (data.results && data.results.length) {
+                    art = data.results[0].artworkUrl100;
+                    if (art) art = art.replace('100x100bb', '200x200bb');
+                }
+                artCache.set(key, art);
+            } catch { artCache.set(key, null); }
+            /* Slight throttle to be kind to the API */
+            await new Promise(ok => setTimeout(ok, 280));
+        }
+        artFetching = false;
+    })();
+}
 
 
 /* ══════════════════ SCORING ═══════════════════════════════════ */
 
-function clean(s) {
-    return s.normalize('NFKD').replace(/[\u0300-\u036f]/g, '')
-        .replace(/[''""`,!?;:()[\]{}<>@#$%^&*~_=+]/g, '')
-        .replace(/\s*[-–—/|]+\s*/g, ' ')
-        .replace(/\s+/g, ' ').trim();
-}
-function sigWords(q) { return q.toLowerCase().split(/\s+/).filter(w => w.length > 1 && !STOPS.has(w)); }
-function relScore(text, ws) { if (!ws.length) return 0; const t = text.toLowerCase(); let h = 0; for (const w of ws) if (t.includes(w)) h++; return h / ws.length; }
-function qualPts(files) {
-    const n = files.length; if (!n) return CFG.W_LOW;
-    const fl = files.filter(f => /\.flac$/i.test(f.filename)).length;
-    if (fl / n >= 0.75) return CFG.W_FLAC;
-    const avg = files.reduce((s, f) => s + (f.bitRate || 0), 0) / n;
-    if (avg >= 320) return CFG.W_320; if (avg >= 256) return CFG.W_256; if (avg >= 192) return CFG.W_192; return CFG.W_LOW;
-}
-function isLowQuality(f) { if (/\.flac$/i.test(f.filename)) return false; return (f.bitRate || 9999) < CFG.MIN_KBPS; }
+function clean(s){return s.normalize('NFKD').replace(/[\u0300-\u036f]/g,'').replace(/[''""`,!?;:()[\]{}<>@#$%^&*~_=+]/g,'').replace(/\s*[-–—/|]+\s*/g,' ').replace(/\s+/g,' ').trim()}
+function sigWords(q){return q.toLowerCase().split(/\s+/).filter(w=>w.length>1&&!STOPS.has(w))}
+function relScore(text,ws){if(!ws.length)return 0;const t=text.toLowerCase();let h=0;for(const w of ws)if(t.includes(w))h++;return h/ws.length}
+function qualPts(files){const n=files.length;if(!n)return CFG.W_LOW;const fl=files.filter(f=>/\.flac$/i.test(f.filename)).length;if(fl/n>=.75)return CFG.W_FLAC;const avg=files.reduce((s,f)=>s+(f.bitRate||0),0)/n;if(avg>=320)return CFG.W_320;if(avg>=256)return CFG.W_256;if(avg>=192)return CFG.W_192;return CFG.W_LOW}
+function isLowQuality(f){if(/\.flac$/i.test(f.filename))return false;return(f.bitRate||9999)<CFG.MIN_KBPS}
 
 
 /* ══════════════════ RANKING ══════════════════════════════════ */
@@ -621,100 +691,99 @@ function rankAlbums(responses, ws) {
     const dirs = [];
     for (const r of responses) {
         const map = {};
-        for (const f of (r.files || [])) {
-            if (!AUDIO.test(f.filename) || isLowQuality(f)) continue;
-            const parts = f.filename.split('\\'); parts.pop();
-            const key = r.username + '|' + parts.join('\\');
-            if (!map[key]) map[key] = { username: r.username, directory: parts.join('\\'), dirName: parts[parts.length-1]||'?', files: [], queueLen: r.queueLength||0, freeSlot: r.hasFreeUploadSlot||false };
+        for (const f of (r.files||[])) {
+            if (!AUDIO.test(f.filename)||isLowQuality(f)) continue;
+            const parts=f.filename.split('\\'); parts.pop();
+            const key=r.username+'|'+parts.join('\\');
+            if (!map[key]) map[key]={username:r.username,directory:parts.join('\\'),dirName:parts[parts.length-1]||'?',files:[],queueLen:r.queueLength||0,freeSlot:r.hasFreeUploadSlot||false};
             map[key].files.push(f);
         }
-        for (const d of Object.values(map)) if (d.files.length >= CFG.MIN_TRACKS) dirs.push(d);
+        for (const d of Object.values(map)) if (d.files.length>=CFG.MIN_TRACKS) dirs.push(d);
     }
     for (const d of dirs) {
-        const rv = relScore(d.directory, ws); d.relevance = rv;
-        let s = rv * CFG.W_REL; s += qualPts(d.files); s += Math.min(d.files.length * CFG.W_TRACK, CFG.W_TRACK_CAP);
-        if (d.freeSlot) s += CFG.W_SLOT; s -= Math.min(d.queueLen * CFG.W_Q_PEN, CFG.W_Q_CAP);
-        if (NOISE.test(d.directory)) s -= CFG.W_NOISE; d.score = s;
+        const rv=relScore(d.directory,ws); d.relevance=rv;
+        let s=rv*CFG.W_REL; s+=qualPts(d.files); s+=Math.min(d.files.length*CFG.W_TRACK,CFG.W_TRACK_CAP);
+        if(d.freeSlot)s+=CFG.W_SLOT; s-=Math.min(d.queueLen*CFG.W_Q_PEN,CFG.W_Q_CAP);
+        if(NOISE.test(d.directory))s-=CFG.W_NOISE; d.score=s;
     }
-    let pool = dirs.filter(d => d.relevance >= CFG.REL_GATE); if (!pool.length) pool = dirs;
-    pool.sort((a, b) => b.score !== a.score ? b.score - a.score : a.queueLen - b.queueLen);
-    return pool.slice(0, CFG.RETRY);
+    let pool=dirs.filter(d=>d.relevance>=CFG.REL_GATE); if(!pool.length) pool=dirs;
+    pool.sort((a,b)=>b.score!==a.score?b.score-a.score:a.queueLen-b.queueLen);
+    return pool.slice(0,CFG.RETRY);
 }
 
 function rankTracks(responses, ws) {
-    const pool = [];
+    const pool=[];
     for (const r of responses) {
-        for (const f of (r.files || [])) {
-            if (!AUDIO.test(f.filename) || isLowQuality(f)) continue;
-            const rv = relScore(f.filename, ws); if (rv < CFG.REL_GATE) continue;
-            let qs; if (/\.flac$/i.test(f.filename)) qs = CFG.W_FLAC;
-            else if ((f.bitRate||0)>=320) qs=CFG.W_320; else if ((f.bitRate||0)>=256) qs=CFG.W_256;
-            else if ((f.bitRate||0)>=192) qs=CFG.W_192; else qs=CFG.W_LOW;
-            let s = rv*CFG.W_REL+qs; if (r.hasFreeUploadSlot) s+=CFG.W_SLOT;
-            s -= Math.min((r.queueLength||0)*CFG.W_Q_PEN, CFG.W_Q_CAP);
-            if (NOISE.test(f.filename)) s-=CFG.W_NOISE;
-            pool.push({ username:r.username, file:f, score:s, relevance:rv, queue:r.queueLength||0, freeSlot:r.hasFreeUploadSlot||false });
+        for (const f of (r.files||[])) {
+            if(!AUDIO.test(f.filename)||isLowQuality(f))continue;
+            const rv=relScore(f.filename,ws);if(rv<CFG.REL_GATE)continue;
+            let qs; if(/\.flac$/i.test(f.filename))qs=CFG.W_FLAC;
+            else if((f.bitRate||0)>=320)qs=CFG.W_320;else if((f.bitRate||0)>=256)qs=CFG.W_256;
+            else if((f.bitRate||0)>=192)qs=CFG.W_192;else qs=CFG.W_LOW;
+            let s=rv*CFG.W_REL+qs;if(r.hasFreeUploadSlot)s+=CFG.W_SLOT;
+            s-=Math.min((r.queueLength||0)*CFG.W_Q_PEN,CFG.W_Q_CAP);
+            if(NOISE.test(f.filename))s-=CFG.W_NOISE;
+            pool.push({username:r.username,file:f,score:s,relevance:rv,queue:r.queueLength||0,freeSlot:r.hasFreeUploadSlot||false});
         }
     }
-    pool.sort((a,b) => b.score-a.score); return pool.slice(0, CFG.RETRY);
+    pool.sort((a,b)=>b.score-a.score); return pool.slice(0,CFG.RETRY);
 }
 
 
 /* ══════════════════ DOWNLOAD HELPERS ══════════════════════════ */
 
-async function jf(r) { if (r.status===404||r.status===204) return null; const t=await r.text(); try{return t?JSON.parse(t):null}catch{return null} }
+async function jf(r){if(r.status===404||r.status===204)return null;const t=await r.text();try{return t?JSON.parse(t):null}catch{return null}}
 
 function prepPick(pick) {
-    const isAlb = Array.isArray(pick.files) && pick.files.length > 1 && !pick.file;
-    const user = pick.username; let files, label;
-    if (isAlb) {
-        files = pick.files.map(f => ({ filename: f.filename, size: f.size }));
-        const fl = pick.files.filter(f => /\.flac$/i.test(f.filename)).length;
-        const qt = fl >= pick.files.length*.75 ? 'FLAC' : `${pick.files.length} files`;
-        label = `📂 ${pick.dirName} · ${fl ? fl+' FLAC' : qt} · ${user}`;
+    const isAlb=Array.isArray(pick.files)&&pick.files.length>1&&!pick.file;
+    const user=pick.username; let files,label;
+    if(isAlb){
+        files=pick.files.map(f=>({filename:f.filename,size:f.size}));
+        const fl=pick.files.filter(f=>/\.flac$/i.test(f.filename)).length;
+        const qt=fl>=pick.files.length*.75?'FLAC':`${pick.files.length} files`;
+        label=`📂 ${pick.dirName} · ${fl?fl+' FLAC':qt} · ${user}`;
     } else {
-        const f = pick.file || (pick.files && pick.files[0]);
-        files = [{ filename: f.filename, size: f.size }]; label = `♫ ${tail(f.filename)} · ${user}`;
+        const f=pick.file||(pick.files&&pick.files[0]);
+        files=[{filename:f.filename,size:f.size}]; label=`♫ ${tail(f.filename)} · ${user}`;
     }
-    return { user, files, label };
+    return {user,files,label};
 }
 
 function collectFiles(ue) {
-    const all = [];
+    const all=[];
     for (const dir of (ue.directories||[])) for (const f of (dir.files||[])) all.push(f);
-    if (!ue.directories && ue.files) for (const f of ue.files) all.push(f);
+    if (!ue.directories&&ue.files) for (const f of ue.files) all.push(f);
     return all;
 }
 
 async function dlState(user, filenames) {
     try {
-        const r = await apiFetch(`${CFG.API_BASE}/transfers/downloads`);
-        const data = await jf(r); if (!Array.isArray(data)) return 'pending';
-        const ue = data.find(u => u.username === user); if (!ue) return 'pending';
-        const all = collectFiles(ue);
-        const want = new Set(filenames.map(n => n.toLowerCase()));
-        const matched = all.filter(f => f.filename && want.has(f.filename.toLowerCase()));
-        if (!matched.length) return 'pending';
+        const r=await apiFetch(`${CFG.API_BASE}/transfers/downloads`);
+        const data=await jf(r); if(!Array.isArray(data)) return 'pending';
+        const ue=data.find(u=>u.username===user); if(!ue) return 'pending';
+        const all=collectFiles(ue);
+        const want=new Set(filenames.map(n=>n.toLowerCase()));
+        const matched=all.filter(f=>f.filename&&want.has(f.filename.toLowerCase()));
+        if(!matched.length)return 'pending';
         let ok=0,prog=0,rej=0,tout=0,err=0;
-        for (const f of matched) { const st=f.state||'';
-            if (/Succeed/i.test(st)) ok++; else if (/Progress|Initializ/i.test(st)) prog++;
-            else if (/Reject/i.test(st)) rej++; else if (/Timed|Timeout/i.test(st)) tout++;
-            else if (/Error|Fail|Abort/i.test(st)) err++;
-        }
-        if (prog>0) return 'progressing'; if (ok===matched.length) return 'completed';
-        if (rej>0) return 'rejected'; if (tout>0) return 'timedout'; if (err>0) return 'errored';
+        for(const f of matched){const st=f.state||'';
+            if(/Succeed/i.test(st))ok++;else if(/Progress|Initializ/i.test(st))prog++;
+            else if(/Reject/i.test(st))rej++;else if(/Timed|Timeout/i.test(st))tout++;
+            else if(/Error|Fail|Abort/i.test(st))err++;}
+        if(prog>0)return 'progressing';if(ok===matched.length)return 'completed';
+        if(rej>0)return 'rejected';if(tout>0)return 'timedout';if(err>0)return 'errored';
         return 'pending';
-    } catch (e) { if (e.message.includes('session')) throw e; return 'pending'; }
+    } catch(e){if(e.message.includes('session'))throw e;return 'pending'}
 }
 
 async function awaitDl(user, filenames) {
-    const deadline = Date.now() + CFG.RETRY_MS;
-    await new Promise(ok => setTimeout(ok, CFG.RETRY_POLL));
-    while (Date.now() < deadline) {
-        const s = await dlState(user, filenames);
-        if (s==='rejected'||s==='timedout'||s==='errored') return 'failed';
-        if (s==='progressing'||s==='completed') return 'ok';
-        await new Promise(ok => setTimeout(ok, CFG.RETRY_POLL));
+    const deadline=Date.now()+CFG.RETRY_MS;
+    await new Promise(ok=>setTimeout(ok,CFG.RETRY_POLL));
+    while(Date.now()<deadline){
+        const s=await dlState(user,filenames);
+        if(s==='rejected'||s==='timedout'||s==='errored')return 'failed';
+        if(s==='progressing'||s==='completed')return 'ok';
+        await new Promise(ok=>setTimeout(ok,CFG.RETRY_POLL));
     }
     return 'ok';
 }
@@ -723,52 +792,66 @@ async function awaitDl(user, filenames) {
 /* ══════════════════ BACKGROUND WATCHER ════════════════════════ */
 
 async function watchJobs() {
-    for (const [id, job] of watchlist) {
-        if (job.exhausted || job.retrying) continue;
-        const grace = job.retries === 0 ? CFG.WATCH_GRACE : CFG.RETRY_MS * 2;
-        if (Date.now() - job.queuedAt < grace) continue;
+    for (const [id,job] of watchlist) {
+        if(job.exhausted||job.retrying) continue;
+        const grace=job.retries===0?CFG.WATCH_GRACE:CFG.RETRY_MS*2;
+        if(Date.now()-job.queuedAt<grace) continue;
         let state;
-        try { state = await dlState(job.user, job.filenames); }
-        catch (e) { if (e.message.includes('session')) return; continue; }
-        if (state === 'completed') { watchlist.delete(id); continue; }
-        if (state === 'progressing' || state === 'pending') continue;
-        const next = job.attempt + 1;
-        if (next < job.candidates.length && job.retries < CFG.WATCH_MAX) {
-            job.retrying = true;
-            try {
-                const { user, files, label } = prepPick(job.candidates[next]);
-                const dr = await apiFetch(`${CFG.API_BASE}/transfers/downloads/${encodeURIComponent(user)}`, {
-                    method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(files)
-                });
-                if (dr.ok||dr.status===201) { job.attempt=next; job.user=user; job.filenames=files.map(f=>f.filename); job.label=label; job.queuedAt=Date.now(); job.retries++; }
+        try{state=await dlState(job.user,job.filenames)}
+        catch(e){if(e.message.includes('session'))return;continue}
+        if(state==='completed'){watchlist.delete(id);continue}
+        if(state==='progressing'||state==='pending')continue;
+        const next=job.attempt+1;
+        if(next<job.candidates.length&&job.retries<CFG.WATCH_MAX){
+            job.retrying=true;
+            try{
+                const{user,files,label}=prepPick(job.candidates[next]);
+                const dr=await apiFetch(`${CFG.API_BASE}/transfers/downloads/${encodeURIComponent(user)}`,{
+                    method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(files)});
+                if(dr.ok||dr.status===201){job.attempt=next;job.user=user;job.filenames=files.map(f=>f.filename);job.label=label;job.queuedAt=Date.now();job.retries++}
                 else job.attempt=next;
-            } catch (e) { if (e.message.includes('session')) return; console.error('[watch]', e); }
-            job.retrying = false;
-        } else job.exhausted = true;
+            }catch(e){if(e.message.includes('session'))return;console.error('[watch]',e)}
+            job.retrying=false;
+        }else job.exhausted=true;
     }
-    const stale = Date.now() - 7200000;
-    for (const [id, job] of watchlist) if (job.queuedAt < stale) watchlist.delete(id);
+    const stale=Date.now()-7200000;
+    for(const[id,job]of watchlist)if(job.queuedAt<stale)watchlist.delete(id);
 }
 
 function updateRetryArea() {
-    const el = document.getElementById('retries'); if (!el) return;
-    const bars = [];
-    for (const [id, job] of watchlist) {
-        if (job.retrying) bars.push(`<div class="retry-bar"><span><span class="s-load">↻</span> retrying <span class="query">"${esc(job.query)}"</span> <span class="src">from ${esc(job.user)} · source ${job.attempt+1}/${job.candidates.length}</span></span></div>`);
-        else if (job.exhausted) bars.push(`<div class="retry-bar"><span><span class="s-err">✗</span> <span class="query">"${esc(job.query)}"</span> — all ${job.candidates.length} sources failed</span><button class="retry-btn" onclick="manualRetry('${id}')">↻ retry search</button></div>`);
+    const el=document.getElementById('retries');if(!el)return;
+    const bars=[];
+    for(const[id,job]of watchlist){
+        if(job.retrying)bars.push(`<div class="retry-bar"><span><span class="s-load">↻</span> retrying <span class="query">"${esc(job.query)}"</span> <span class="src">from ${esc(job.user)} · source ${job.attempt+1}/${job.candidates.length}</span></span></div>`);
+        else if(job.exhausted)bars.push(`<div class="retry-bar"><span><span class="s-err">✗</span> <span class="query">"${esc(job.query)}"</span> — all ${job.candidates.length} sources failed</span><button class="retry-btn" onclick="manualRetry('${id}')">↻ retry search</button></div>`);
     }
-    el.innerHTML = bars.join('');
+    el.innerHTML=bars.join('');
 }
 
 function manualRetry(id) {
-    const job = watchlist.get(id); if (!job) return;
-    document.getElementById('q').value = job.query;
-    if (mode !== job.mode) { const btns = document.querySelectorAll('.tog'); setMode(job.mode, job.mode==='album'?btns[0]:btns[1]); }
+    const job=watchlist.get(id);if(!job)return;
+    document.getElementById('q').value=job.query;
+    if(mode!==job.mode){const btns=document.querySelectorAll('.tog');setMode(job.mode,job.mode==='album'?btns[0]:btns[1])}
     watchlist.delete(id); go();
 }
 
 
 /* ══════════════════ DOWNLOAD MONITOR ══════════════════════════ */
+
+/** Get a sortable timestamp from a file transfer object */
+function fileTime(f) {
+    const t = f.requestedAt || f.startedAt || f.enqueuedAt || f.createdAt;
+    if (t) { const d = new Date(t); if (!isNaN(d.getTime())) return d.getTime(); }
+    return 0;
+}
+
+/** Sort order: active first, then by timestamp descending */
+function dlSortOrder(st) {
+    if (/Progress|Initializ/i.test(st)) return 0;
+    if (/Queue|Request/i.test(st)) return 1;
+    if (/Succeed|Complet/i.test(st)) return 3;
+    return 2;
+}
 
 async function mon() {
     try {
@@ -778,118 +861,214 @@ async function mon() {
         const pg = document.getElementById('pager');
         const rows = [];
 
-        if (Array.isArray(d)) for (const u of d) { const all = collectFiles(u); for (const f of all) rows.push({ user: u.username, f }); }
+        if (Array.isArray(d)) for (const u of d) { const all=collectFiles(u); for (const f of all) rows.push({user:u.username,f}); }
+
+        /* Sort: active first, then most recent */
+        rows.sort((a, b) => {
+            const sa = dlSortOrder(a.f.state || '');
+            const sb = dlSortOrder(b.f.state || '');
+            if (sa !== sb) return sa - sb;
+            return fileTime(b.f) - fileTime(a.f);
+        });
 
         let visible = rows;
-        if (showActive) visible = rows.filter(({ f }) => /Queue|Request|Initializ|Progress/i.test(f.state||'') || !(f.state||''));
+        if (showActive) visible = rows.filter(({f}) => /Queue|Request|Initializ|Progress/i.test(f.state||'') || !(f.state||''));
 
         const catBtn = document.querySelector('.cat-btn');
-        if (catBtn) { const h = rows.length - visible.length; catBtn.title = showActive ? `showing active (${h} hidden) — click to show all` : 'hide completed — show active only'; }
+        if (catBtn) { const h=rows.length-visible.length; catBtn.title=showActive?`showing active (${h} hidden) — click to show all`:'hide completed — show active only'; }
 
         if (!visible.length && rows.length && showActive) {
-            tb.innerHTML = '<tr><td colspan="4" class="empty">all downloads filtered — click 𓃠 to show</td></tr>'; pg.innerHTML = '';
+            tb.innerHTML='<tr><td colspan="4" class="empty">all downloads filtered — click 𓃠 to show</td></tr>'; pg.innerHTML='';
         } else if (!visible.length) {
-            tb.innerHTML = '<tr><td colspan="4" class="empty">nothing yet.</td></tr>'; pg.innerHTML = '';
+            tb.innerHTML='<tr><td colspan="4" class="empty">nothing yet.</td></tr>'; pg.innerHTML='';
         } else {
             const pages = Math.ceil(visible.length / CFG.PER_PAGE);
             dlPage = Math.max(1, Math.min(dlPage, pages));
             const start = (dlPage-1)*CFG.PER_PAGE;
             const slice = visible.slice(start, start+CFG.PER_PAGE);
 
-            tb.innerHTML = slice.map(({ user, f }) => {
-                const p = f.percentComplete!=null ? f.percentComplete.toFixed(1) : f.size>0 ? ((f.bytesTransferred||0)/f.size*100).toFixed(1) : '0.0';
-                const st = f.state||'…';
-                const c = /complet.*succeed|succeed/i.test(st)?'s-ok':/error|fail|abort|cancel|timed|reject/i.test(st)?'s-err':'';
-                return `<tr><td title="${esc(f.filename)}">${esc(tail(f.filename))}</td><td>${esc(user)}</td><td><div class="bar-bg"><div class="bar-fg" style="width:${p}%"></div></div>${p}%</td><td class="${c}">${esc(st)}</td></tr>`;
+            tb.innerHTML = slice.map(({user, f}) => {
+                const p  = f.percentComplete!=null ? f.percentComplete.toFixed(1)
+                         : f.size>0 ? ((f.bytesTransferred||0)/f.size*100).toFixed(1) : '0.0';
+                const st = f.state || '…';
+                const c  = /complet.*succeed|succeed/i.test(st)?'s-ok'
+                         : /error|fail|abort|cancel|timed|reject/i.test(st)?'s-err':'';
+                const art = artHtml(f.filename);
+                return `<tr>` +
+                    `<td><div class="file-cell">${art}<span class="file-name" title="${esc(f.filename)}">${esc(tail(f.filename))}</span></div></td>` +
+                    `<td>${esc(user)}</td>` +
+                    `<td><div class="bar-bg"><div class="bar-fg" style="width:${p}%"></div></div>${p}%</td>` +
+                    `<td class="${c}">${esc(st)}</td></tr>`;
             }).join('');
 
             pg.innerHTML = pages > 1
-                ? `<button class="pg-btn" onclick="dlPg(-1)" ${dlPage<=1?'disabled':''}>◂</button><span class="pg-info">${dlPage} / ${pages}</span><button class="pg-btn" onclick="dlPg(1)" ${dlPage>=pages?'disabled':''}>▸</button><span class="pg-note">${visible.length} total</span>`
+                ? `<button class="pg-btn" onclick="dlPg(-1)" ${dlPage<=1?'disabled':''}>◂</button>` +
+                  `<span class="pg-info">${dlPage} / ${pages}</span>` +
+                  `<button class="pg-btn" onclick="dlPg(1)" ${dlPage>=pages?'disabled':''}>▸</button>` +
+                  `<span class="pg-note">${visible.length} total</span>`
                 : '';
         }
 
-        if (watchlist.size > 0 && Date.now() - lastWatch >= CFG.WATCH_POLL) { lastWatch = Date.now(); await watchJobs(); }
+        if (watchlist.size>0&&Date.now()-lastWatch>=CFG.WATCH_POLL){lastWatch=Date.now();await watchJobs()}
         updateRetryArea();
-    } catch (e) {
-        if (e.message.includes('session') || e.message.includes('not authenticated')) return;
-        console.error('mon', e);
+    } catch(e) {
+        if(e.message.includes('session')||e.message.includes('not authenticated'))return;
+        console.error('mon',e);
     }
 }
 
 
-/* ══════════════════ MAIN HANDLER ══════════════════════════════ */
+/* ══════════════════ SINGLE-ITEM SEARCH & DOWNLOAD ═══════════ */
 
-async function go() {
-    const raw = document.getElementById('q').value;
-    if (!raw.trim()) return;
-    const q = clean(raw), ws = sigWords(q);
-    const btn = document.getElementById('goBtn');
-    btn.disabled = true;
-    stat(`<span class="s-load">searching "${esc(q)}" …</span>`);
+/**
+ * Process a single search query. Used by the batch orchestrator.
+ * @param {string} rawQuery  — the raw user input
+ * @param {string} prefix    — e.g. "[2/5] " for batch progress display
+ * @throws on failure
+ */
+async function goSingle(rawQuery, prefix) {
+    const q  = clean(rawQuery);
+    const ws = sigWords(q);
 
-    try {
-        const sr = await apiFetch(`${CFG.API_BASE}/searches`, {
-            method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ searchText: q })
+    stat(`<span class="s-load">${prefix}searching "${esc(q)}" …</span>`);
+
+    const sr = await apiFetch(`${CFG.API_BASE}/searches`, {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({ searchText: q })
+    });
+    if (!sr.ok) throw new Error(`search create failed (${sr.status})`);
+    const sd = await jf(sr);
+    if (!sd?.id) throw new Error('no search id returned');
+    const sid = sd.id;
+
+    let candidates=[], sources=0, lastRes=[];
+    for (let i=0; i<CFG.POLLS; i++) {
+        stat(`<span class="s-load">${prefix}poll ${i+1}/${CFG.POLLS} · ${sources} sources</span>`);
+        await new Promise(ok => setTimeout(ok, CFG.DELAY));
+        const rr = await apiFetch(`${CFG.API_BASE}/searches/${sid}/responses`);
+        const rd = await jf(rr); if (!rd) continue;
+        const res = Array.isArray(rd)?rd:Array.isArray(rd.responses)?rd.responses:[];
+        sources = res.length; if(!sources) continue; lastRes = res;
+        candidates = mode==='album' ? rankAlbums(res,ws) : rankTracks(res,ws);
+        const best = candidates[0];
+        if (best && mode==='album' && best.relevance>=CFG.ALBUM_EXIT_REL &&
+            best.score>=CFG.ALBUM_EXIT_SCORE && best.files.length>=CFG.ALBUM_EXIT_FILES &&
+            i>=CFG.ALBUM_EXIT_POLL) break;
+        if (best && mode==='track' && best.relevance>=CFG.TRACK_EXIT_REL &&
+            best.score>=CFG.TRACK_EXIT_SCORE && i>=CFG.TRACK_EXIT_POLL) break;
+    }
+
+    let fb = null;
+    if (!candidates.length && lastRes.length) {
+        candidates = mode==='album' ? rankTracks(lastRes,ws) : rankAlbums(lastRes,ws);
+        if (candidates.length) fb = mode==='album' ? 'track' : 'album';
+    }
+    if (!candidates.length) throw new Error(`no ${mode} results across ${sources} sources — try simpler terms`);
+
+    let queued=false, lastErr='';
+    for (let a=0; a<candidates.length; a++) {
+        const {user,files,label} = prepPick(candidates[a]);
+        const tag = candidates.length>1 ? ` [${a+1}/${candidates.length}]` : '';
+        stat(`<span class="s-load">${prefix}queueing${tag} from ${esc(user)} …</span>`);
+
+        const dr = await apiFetch(`${CFG.API_BASE}/transfers/downloads/${encodeURIComponent(user)}`, {
+            method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(files)
         });
-        if (!sr.ok) throw new Error(`search create failed (${sr.status})`);
-        const sd = await jf(sr); if (!sd?.id) throw new Error('no search id returned');
-        const sid = sd.id;
+        if (!dr.ok && dr.status!==201) { lastErr=`queue failed (${dr.status})`; continue; }
 
-        let candidates = [], sources = 0, lastRes = [];
-        for (let i = 0; i < CFG.POLLS; i++) {
-            stat(`<span class="s-load">poll ${i+1}/${CFG.POLLS} · ${sources} sources</span>`);
-            await new Promise(ok => setTimeout(ok, CFG.DELAY));
-            const rr = await apiFetch(`${CFG.API_BASE}/searches/${sid}/responses`);
-            const rd = await jf(rr); if (!rd) continue;
-            const res = Array.isArray(rd)?rd:Array.isArray(rd.responses)?rd.responses:[];
-            sources = res.length; if (!sources) continue; lastRes = res;
-            candidates = mode==='album' ? rankAlbums(res,ws) : rankTracks(res,ws);
-            const best = candidates[0];
-            if (best && mode==='album' && best.relevance>=CFG.ALBUM_EXIT_REL && best.score>=CFG.ALBUM_EXIT_SCORE && best.files.length>=CFG.ALBUM_EXIT_FILES && i>=CFG.ALBUM_EXIT_POLL) break;
-            if (best && mode==='track' && best.relevance>=CFG.TRACK_EXIT_REL && best.score>=CFG.TRACK_EXIT_SCORE && i>=CFG.TRACK_EXIT_POLL) break;
-        }
+        stat(`<span class="s-load">${prefix}verifying${tag} …</span>`);
+        const result = await awaitDl(user, files.map(f=>f.filename));
+        if (result==='failed') { lastErr=`${user} rejected / timed out`; stat(`<span class="s-mute">${prefix}source ${a+1} failed, trying next …</span>`); continue; }
 
-        let fb = null;
-        if (!candidates.length && lastRes.length) { candidates = mode==='album'?rankTracks(lastRes,ws):rankAlbums(lastRes,ws); if (candidates.length) fb = mode==='album'?'track':'album'; }
-        if (!candidates.length) throw new Error(`no ${mode} results across ${sources} sources — try simpler or different terms`);
+        const fbNote    = fb  ? `<br><span class="s-mute">(no ${mode} found — used ${fb} mode)</span>` : '';
+        const retryNote = a>0 ? `<br><span class="s-mute">(attempt ${a+1} of ${candidates.length})</span>` : '';
+        stat(`<span class="s-ok">${prefix}✓ queued — ${label}</span>${fbNote}${retryNote}`);
+        queued = true;
 
-        let queued = false, lastErr = '';
-        for (let a = 0; a < candidates.length; a++) {
-            const { user, files, label } = prepPick(candidates[a]);
-            const tag = candidates.length > 1 ? ` [${a+1}/${candidates.length}]` : '';
-            stat(`<span class="s-load">queueing${tag} from ${esc(user)} …</span>`);
+        /* Register in watchlist for background retries */
+        const jobId = Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+        watchlist.set(jobId, {
+            query:q, mode:fb||mode, ws, candidates, attempt:a,
+            user, filenames:files.map(f=>f.filename), label,
+            queuedAt:Date.now(), retries:0, exhausted:false, retrying:false
+        });
+        break;
+    }
 
-            const dr = await apiFetch(`${CFG.API_BASE}/transfers/downloads/${encodeURIComponent(user)}`, {
-                method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(files)
-            });
-            if (!dr.ok && dr.status!==201) { lastErr=`queue failed (${dr.status})`; continue; }
-
-            stat(`<span class="s-load">verifying${tag} …</span>`);
-            const result = await awaitDl(user, files.map(f=>f.filename));
-            if (result==='failed') { lastErr=`${user} rejected / timed out`; stat(`<span class="s-mute">source ${a+1} failed, trying next …</span>`); continue; }
-
-            const fbNote = fb ? `<br><span class="s-mute">(no ${mode} found — used ${fb} mode)</span>` : '';
-            const retryNote = a > 0 ? `<br><span class="s-mute">(attempt ${a+1} of ${candidates.length})</span>` : '';
-            stat(`<span class="s-ok">✓ queued — ${label}</span>${fbNote}${retryNote}`);
-            document.getElementById('q').value = '';
-            queued = true;
-
-            const jobId = Date.now().toString(36) + Math.random().toString(36).slice(2,6);
-            watchlist.set(jobId, { query:q, mode:fb||mode, ws, candidates, attempt:a, user, filenames:files.map(f=>f.filename), label, queuedAt:Date.now(), retries:0, exhausted:false, retrying:false });
-            break;
-        }
-
-        if (!queued) throw new Error(`all ${candidates.length} sources failed (${lastErr})`);
-        apiFetch(`${CFG.API_BASE}/searches/${sid}`, { method:'DELETE' }).catch(()=>{});
-
-    } catch (e) {
-        if (!e.message.includes('session') && !e.message.includes('not authenticated'))
-            stat(`<span class="s-err">✗ ${e.message}</span>`);
-        console.error(e);
-    } finally { btn.disabled = false; }
+    if (!queued) throw new Error(`all ${candidates.length} sources failed (${lastErr})`);
+    apiFetch(`${CFG.API_BASE}/searches/${sid}`,{method:'DELETE'}).catch(()=>{});
 }
 
-/* ── boot ── */
+
+/* ══════════════════ MAIN HANDLER (BATCH ORCHESTRATOR) ════════ */
+
+async function go() {
+    const inputVal = document.getElementById('q').value.trim();
+    let items = [...queueItems];
+
+    /* Add current input (supports comma / newline splitting) */
+    if (inputVal) {
+        const parsed = inputVal.split(/[,\n]/).map(s => s.trim()).filter(Boolean);
+        items.push(...parsed);
+    }
+
+    if (!items.length) return;
+
+    /* Deduplicate (case-insensitive) */
+    const seen = new Set();
+    items = items.filter(i => { const k=i.toLowerCase(); if(seen.has(k))return false; seen.add(k); return true; });
+
+    /* Clear queue & input */
+    queueItems = [];
+    document.getElementById('q').value = '';
+    renderQueue();
+    updateGoBtn();
+
+    const btn = document.getElementById('goBtn');
+    btn.disabled = true;
+
+    if (items.length === 1) {
+        /* ── Single item — direct processing ── */
+        try {
+            await goSingle(items[0], '');
+        } catch (e) {
+            if (!e.message.includes('session') && !e.message.includes('not authenticated'))
+                stat(`<span class="s-err">✗ ${e.message}</span>`);
+            console.error(e);
+        }
+    } else {
+        /* ── Batch processing ── */
+        const results = [];
+        for (let i = 0; i < items.length; i++) {
+            const prefix = `[${i+1}/${items.length}] `;
+            try {
+                await goSingle(items[i], prefix);
+                results.push({ query: items[i], ok: true });
+            } catch (e) {
+                results.push({ query: items[i], ok: false, err: e.message });
+                if (e.message.includes('session') || e.message.includes('not authenticated')) break;
+            }
+        }
+        /* Batch summary */
+        const ok   = results.filter(r => r.ok).length;
+        const fail = results.filter(r => !r.ok);
+        let html = `<span class="${ok===items.length?'s-ok':ok>0?'s-mute':'s-err'}">` +
+                   `batch complete: ${ok}/${items.length} queued</span>`;
+        if (fail.length) {
+            html += '<br>' + fail.map(r =>
+                `<span class="s-err">✗ "${esc(r.query)}": ${r.err}</span>`
+            ).join('<br>');
+        }
+        stat(html);
+    }
+
+    btn.disabled = false;
+}
+
+
+/* ═════════════════════════════════════════════════════════════
+   BOOT
+   ═════════════════════════════════════════════════════════════ */
 init();
 </script>
 </body>
