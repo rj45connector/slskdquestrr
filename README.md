@@ -19,8 +19,10 @@ need to touch the slskd interface.
 | | |
 |---|---|
 | 🎵 **Album & Track modes** | Full-album folders or single best-quality files |
-| 🏆 **Smart scoring**       | Ranks results by format, bitrate, relevance, queue length |
+| 🏆 **"Smart" scoring**       | Ranks results by format, bitrate, relevance, queue length |
 | 🔒 **No CORS headaches**   | Built-in nginx reverse-proxy to the slskd API |
+| 👤 **Easy Auth**   | Easily log in with your slskd credentials, no keys needed |
+| 🔁 **Timeout/Failed Handler**   | Internal process for retrying timed out/failed queries |
 
 ---
 
@@ -87,7 +89,7 @@ Open **http://YOUR_SERVER_IP:8082** in your browser.
 
 ---
 
-This WebUI uses slskd web UI credentials to authenticate. Please ensure you have a strong username/password conmanation if exposing these services. 
+> This WebUI uses slskd web UI credentials to authenticate. Please ensure you have a strong username/password conmanation if exposing these services. 
 
 ---
 
@@ -193,10 +195,10 @@ docker run --rm -p 8082:80 \
 
 | Piece | Purpose |
 |---|---|
-| `Dockerfile` | Builds a ~7 MB `nginx:alpine` image with the frontend baked in |
-| `entrypoint.sh` | At startup: generates `/config.js` from env vars, processes the nginx template, starts nginx |
-| `config.js` (generated) | Passes `SLSKD_API_KEY` and `API_BASE` to the browser JS at runtime — no rebuild needed to change config |
-| `default.conf.template` | Nginx serves the HTML at `/` and proxies `/api/v0/*` → slskd — eliminates CORS entirely |
-| `index.html` | Reads connection info from `window.SLSKD_CONFIG` (loaded via `config.js`) instead of hard-coding it |
+| `Dockerfile` | Builds a `nginx:alpine` image |
+| `entrypoint.sh` | generates `/config.js` from env vars, processes the nginx template, starts nginx |
+| `config.js` (generated) | Passes `API_BASE` to the browser JS at runtime |
+| `default.conf.template` | Nginx serves the HTML at `/` and proxies `/api/v0/*` -> slskd — eliminates CORS |
+| `index.html` | Reads connection info from `window.SLSKD_CONFIG` (loaded via `config.js`) |
 
 > **Security note:** Your Bearer Token is visible via HTTP. This is acceptable for a private, self-hosted tool behind your LAN/VPN. Do **not** expose port 8082 to the public internet without additional authentication (e.g., Authelia, Authentik, or HTTP basic auth in nginx).
