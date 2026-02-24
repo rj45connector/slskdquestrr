@@ -22,7 +22,7 @@
         }
         *{box-sizing:border-box;margin:0;padding:0}
         body{font-family:var(--font);background:var(--bg0h);color:var(--fg);
-             padding:28px 16px;display:flex;flex-direction:column;align-items:center;
+             display:flex;flex-direction:column;align-items:center;
              min-height:100vh;-webkit-font-smoothing:antialiased;overflow-x:hidden}
 
         /* ═══ KEYFRAMES ══════════════════════════════════════════ */
@@ -31,56 +31,63 @@
         @keyframes pulse{0%,100%{opacity:1}50%{opacity:.32}}
         @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
         @keyframes chipIn{from{opacity:0;transform:scale(.8)}to{opacity:1;transform:scale(1)}}
-        @keyframes logoBreath{0%,100%{transform:translateY(0) scale(1);text-shadow:0 0 25px rgba(250,189,47,.3)}
-            50%{transform:translateY(-10px) scale(1.03);text-shadow:0 0 50px rgba(250,189,47,.6),0 0 100px rgba(250,189,47,.15)}}
-        @keyframes logoEnter{0%{opacity:0;transform:scale(.4) translateY(30px);filter:blur(15px)}
+        @keyframes artPop{from{opacity:0;transform:scale(.8)}to{opacity:1;transform:scale(1)}}
+        /* splash */
+        @keyframes logoEnter{0%{opacity:0;transform:scale(.3) translateY(40px);filter:blur(18px)}
             100%{opacity:1;transform:scale(1) translateY(0);filter:blur(0)}}
-        @keyframes titleReveal{0%{opacity:0;transform:translateY(12px);letter-spacing:8px}
-            100%{opacity:1;transform:translateY(0);letter-spacing:-0.8px}}
-        @keyframes cardSlide{0%{opacity:0;transform:translateY(30px) scale(.96)}
+        @keyframes logoFloat{0%,100%{transform:translateY(0);text-shadow:0 0 25px rgba(250,189,47,.3)}
+            50%{transform:translateY(-10px);text-shadow:0 0 55px rgba(250,189,47,.6),0 0 100px rgba(250,189,47,.15)}}
+        @keyframes titleType{0%{opacity:0;letter-spacing:12px;filter:blur(8px)}
+            100%{opacity:1;letter-spacing:-.8px;filter:blur(0)}}
+        @keyframes cardRise{0%{opacity:0;transform:translateY(35px) scale(.95)}
             100%{opacity:1;transform:translateY(0) scale(1)}}
-        @keyframes fieldSlide{0%{opacity:0;transform:translateX(-15px)}100%{opacity:1;transform:translateX(0)}}
-        @keyframes splashOut{to{opacity:0;transform:scale(1.06)}}
-        @keyframes artFadeIn{from{opacity:0;transform:scale(.85)}to{opacity:1;transform:scale(1)}}
+        @keyframes fieldIn{0%{opacity:0;transform:translateX(-18px)}100%{opacity:1;transform:translateX(0)}}
 
         /* ═══ SPLASH SCREEN ══════════════════════════════════════ */
         .splash{position:fixed;inset:0;z-index:200;background:var(--bg0h);
-                display:flex;align-items:center;justify-content:center;overflow:hidden}
-        .splash.exit{animation:splashOut .7s var(--ease) forwards;pointer-events:none}
-        .splash.gone{display:none}
+                display:flex;align-items:center;justify-content:center;overflow:hidden;
+                transition:opacity .65s var(--ease),transform .65s var(--ease)}
+        .splash.exiting{opacity:0;transform:scale(1.06);pointer-events:none}
+        .splash.hidden{display:none}
         #particleCanvas{position:absolute;inset:0;z-index:0}
-        .splash::after{content:'';position:absolute;inset:0;z-index:1;pointer-events:none;
-            background:radial-gradient(ellipse at center,transparent 40%,rgba(29,32,33,.75) 100%)}
+        .splash-vig{position:absolute;inset:0;z-index:1;pointer-events:none;
+            background:radial-gradient(ellipse at center,transparent 35%,rgba(29,32,33,.8) 100%)}
         .splash-inner{position:relative;z-index:2;text-align:center;width:100%;max-width:400px;padding:0 20px}
         .splash-logo{font-size:5.5rem;line-height:1;color:var(--yellow);user-select:none;
-            animation:logoEnter 1.2s cubic-bezier(.16,1,.3,1) both,logoBreath 4s ease-in-out 1.2s infinite;
-            margin-bottom:8px}
+            opacity:0;animation:logoEnter 1.3s cubic-bezier(.16,1,.3,1) .1s forwards;margin-bottom:8px}
+        .splash-logo.breathing{animation:logoEnter 1.3s cubic-bezier(.16,1,.3,1) .1s forwards,
+            logoFloat 4s ease-in-out 1.4s infinite}
         .splash-title{font-size:1.7rem;font-weight:700;color:var(--fg);
-            animation:titleReveal 1s var(--ease) .4s both;margin-bottom:32px}
-        .splash-card{background:rgba(60,56,54,.6);backdrop-filter:blur(18px);
-            -webkit-backdrop-filter:blur(18px);border:1px solid rgba(235,219,178,.07);
-            border-radius:16px;padding:30px 26px;opacity:0;pointer-events:none;
+            opacity:0;animation:titleType 1.1s var(--ease) .5s forwards;margin-bottom:32px}
+        /* login card — hidden until .show is added */
+        .splash-card{background:rgba(60,56,54,.55);backdrop-filter:blur(18px);
+            -webkit-backdrop-filter:blur(18px);border:1px solid rgba(235,219,178,.06);
+            border-radius:16px;padding:30px 26px;
+            opacity:0;transform:translateY(35px) scale(.95);pointer-events:none;
             transition:none}
-        .splash-card.show{opacity:1;pointer-events:auto;animation:cardSlide .65s var(--ease) both}
-        .splash-card .s-field{opacity:0}
-        .splash-card.show .s-field{animation:fieldSlide .4s var(--ease) both}
-        .splash-card.show .s-field:nth-child(1){animation-delay:.12s}
-        .splash-card.show .s-field:nth-child(2){animation-delay:.22s}
-        .splash-card.show .s-field:nth-child(3){animation-delay:.32s}
-        .splash-card.show .s-field:nth-child(4){animation-delay:.42s}
-        .splash-card.show .s-field:nth-child(5){animation-delay:.52s}
-        .s-label{font-size:.58rem;color:var(--bg4);margin-bottom:5px;text-align:left}
-        .splash-card .inp{margin-bottom:14px;background:rgba(29,32,33,.6);border-color:rgba(80,73,69,.7)}
+        .splash-card.show{opacity:1;transform:translateY(0) scale(1);pointer-events:auto;
+            animation:cardRise .6s var(--ease) forwards}
+        .s-field{opacity:0;transform:translateX(-18px)}
+        .splash-card.show .s-field{animation:fieldIn .4s var(--ease) forwards}
+        .splash-card.show .s-field:nth-child(1){animation-delay:.08s}
+        .splash-card.show .s-field:nth-child(2){animation-delay:.16s}
+        .splash-card.show .s-field:nth-child(3){animation-delay:.24s}
+        .splash-card.show .s-field:nth-child(4){animation-delay:.34s}
+        .splash-card.show .s-field:nth-child(5){animation-delay:.44s}
+        .s-label{font-size:.56rem;color:var(--bg4);margin-bottom:4px;text-align:left}
+        .splash-card .inp{margin-bottom:14px;background:rgba(29,32,33,.55);border-color:rgba(80,73,69,.6)}
         .splash-card .inp:focus{border-color:var(--blue);background:rgba(29,32,33,.85)}
         .splash-card .btn{margin-top:4px}
+        .splash-status-text{font-size:.6rem;color:var(--gray);margin-top:12px;
+            min-height:18px;animation:fadeUp .3s var(--ease)}
 
         /* ═══ MAIN APP WRAPPER ═══════════════════════════════════ */
         .main-wrap{display:flex;flex-direction:column;align-items:center;width:100%;
-            opacity:0;transform:translateY(22px);pointer-events:none;
-            transition:opacity .6s var(--ease) .2s,transform .6s var(--ease) .2s}
+            padding:28px 16px;opacity:0;transform:translateY(22px);pointer-events:none;
+            transition:opacity .6s var(--ease),transform .6s var(--ease)}
         .main-wrap.active{opacity:1;transform:translateY(0);pointer-events:auto}
         .title{color:var(--yellow);font-size:1.4rem;font-weight:700;margin-bottom:24px;
-               letter-spacing:-.5px;animation:enter .55s var(--ease) both}
+            letter-spacing:-.5px;animation:enter .55s var(--ease) both}
         .card{background:var(--bg1);padding:var(--card-pad);border-radius:var(--radius);
               width:100%;max-width:var(--card-max);border:1px solid var(--bg2);
               margin-bottom:var(--card-gap);animation:enter .55s var(--ease) both;
@@ -148,22 +155,19 @@
         /* ═══ TABLE + ARTWORK ════════════════════════════════════ */
         .scroll{overflow-x:auto}
         table{width:100%;border-collapse:collapse;font-size:.7rem}
-        th{background:var(--bg2);color:var(--fg2);padding:9px 10px;text-align:left;
-           font-weight:600;white-space:nowrap}
+        th{background:var(--bg2);color:var(--fg2);padding:9px 10px;text-align:left;font-weight:600;white-space:nowrap}
         td{padding:7px 10px;border-bottom:1px solid var(--bg2);color:var(--fg2);white-space:nowrap}
         tbody tr{transition:background var(--speed) var(--ease)}
         tbody tr:hover{background:rgba(80,73,69,.25)}
         .bar-bg{background:var(--bg2);width:100%;height:5px;border-radius:3px;overflow:hidden;margin-bottom:3px}
-        .bar-fg{height:100%;width:0%;border-radius:3px;background:linear-gradient(90deg,var(--aqua-d),var(--aqua));
-                transition:width .7s var(--ease)}
+        .bar-fg{height:100%;width:0%;border-radius:3px;background:linear-gradient(90deg,var(--aqua-d),var(--aqua));transition:width .7s var(--ease)}
         .empty{text-align:center;color:var(--bg3);font-style:italic;padding:18px 10px !important}
-        /* artwork cell */
         .fcell{display:flex;align-items:center;gap:8px;min-width:0;max-width:300px}
         .art-w{width:36px;height:36px;border-radius:5px;background:var(--bg2);flex-shrink:0;
                overflow:hidden;display:flex;align-items:center;justify-content:center;
                color:var(--bg4);font-size:.6rem;position:relative}
-        .art-w img{width:100%;height:100%;object-fit:cover;display:block;
-                   animation:artFadeIn .3s var(--ease)}
+        .art-w img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
+                   animation:artPop .3s var(--ease)}
         .fname{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
         /* ═══ RETRIES ════════════════════════════════════════════ */
@@ -178,7 +182,7 @@
         .retry-btn:hover{background:var(--orange);color:var(--bg0);transform:translateY(-1px);
                          box-shadow:0 3px 10px rgba(214,93,14,.3)}
 
-        /* ═══ DOWNLOAD HEADER + FILTER + PAGINATION ══════════════ */
+        /* ═══ DL HEADER / FILTER / PAGER ═════════════════════════ */
         .dl-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
         .dl-head .card-label{margin-bottom:0}
         .cat-btn{background:none;border:1px solid transparent;color:var(--gray);font-size:1.15rem;
@@ -206,7 +210,7 @@
             .splash-title{font-size:1.3rem}
         }
         @media(max-width:520px){
-            body{padding:14px 6px}
+            .main-wrap{padding:14px 6px}
             .card{padding:16px}
             td,th{padding:5px 6px;font-size:.64rem}
             .fcell{max-width:150px;gap:5px}
@@ -227,12 +231,13 @@
 <!-- ═══ SPLASH / LOGIN ═══════════════════════════════════════════ -->
 <div id="splash" class="splash">
     <canvas id="particleCanvas"></canvas>
+    <div class="splash-vig"></div>
     <div class="splash-inner">
-        <div class="splash-logo">𓅪</div>
+        <div id="splashLogo" class="splash-logo">𓅪</div>
         <div class="splash-title">slskdquestrr</div>
         <div id="splashCard" class="splash-card">
             <div class="s-field">
-                <div class="s-label">server url (blank = same host)</div>
+                <div class="s-label">server url (blank = same origin)</div>
                 <input class="inp" type="text" id="sServer" placeholder="/api/v0" autocomplete="url">
             </div>
             <div class="s-field">
@@ -249,7 +254,7 @@
                 <button class="btn" id="loginBtn" onclick="doLogin()">log in</button>
             </div>
             <div class="s-field">
-                <div id="loginMsg" style="min-height:18px;font-size:.72rem;margin-top:2px;text-align:center"></div>
+                <div id="loginMsg" class="splash-status-text"></div>
             </div>
         </div>
     </div>
@@ -260,7 +265,6 @@
     <h1 class="title"> 𓅪 slskdquestrr </h1>
     <button id="logoutBtn" class="logout-btn" onclick="logout()" style="display:none">logout</button>
     <div id="app">
-        <!-- search card -->
         <div class="card">
             <div class="card-label">search & download</div>
             <div class="toggle">
@@ -281,7 +285,6 @@
             <button class="btn" id="goBtn" onclick="go()">search & download</button>
             <div id="status"><span class="st s-mute">ready.</span></div>
         </div>
-        <!-- downloads card -->
         <div class="card" style="max-width:var(--table-max)">
             <div class="dl-head">
                 <div class="card-label">downloads</div>
@@ -301,89 +304,94 @@
 
 <script src="/config.js"></script>
 <script>
-/* ╔═══════════════════════════════════════════════════════════════╗
-   ║  PARTICLE CONSTELLATION — canvas background for splash       ║
-   ╚═══════════════════════════════════════════════════════════════╝ */
-class Particles {
-    constructor(canvas) {
-        this.c = canvas;
-        this.ctx = canvas.getContext('2d');
-        this.pts = [];
-        this.pal = ['#fabd2f','#83a598','#d3869b','#8ec07c','#fe8019','#fb4934','#b8bb26'];
-        this.mx = -9999; this.my = -9999;
-        this.running = true;
-        this._resize = () => this.resize();
-        this._mouse  = e => { this.mx = e.clientX; this.my = e.clientY; };
-        this._touch  = e => { if(e.touches[0]){this.mx=e.touches[0].clientX;this.my=e.touches[0].clientY;} };
-        window.addEventListener('resize', this._resize);
-        this.c.addEventListener('mousemove', this._mouse);
-        this.c.addEventListener('touchmove', this._touch, {passive:true});
-        this.resize();
-        this.spawn();
-        this.tick();
-    }
-    resize() {
-        this.c.width = window.innerWidth;
-        this.c.height = window.innerHeight;
-    }
-    spawn() {
-        const n = Math.max(20, Math.min(55, Math.floor(this.c.width * this.c.height / 18000)));
-        this.pts = [];
-        for (let i = 0; i < n; i++) this.pts.push({
-            x: Math.random()*this.c.width, y: Math.random()*this.c.height,
-            vx:(Math.random()-.5)*.35, vy:(Math.random()-.5)*.35,
-            r: Math.random()*2+1.2,
-            col: this.pal[Math.floor(Math.random()*this.pal.length)],
-            a: Math.random()*.45+.25
-        });
-    }
-    tick() {
-        if (!this.running) return;
-        requestAnimationFrame(() => this.tick());
-        const {ctx,c,pts,mx,my} = this;
-        ctx.clearRect(0,0,c.width,c.height);
-        /* update */
-        for (const p of pts) {
-            /* mouse repulsion */
-            const dx=p.x-mx, dy=p.y-my, d=Math.sqrt(dx*dx+dy*dy);
-            if (d<160 && d>0){const f=(160-d)/160*.12;p.vx+=dx/d*f;p.vy+=dy/d*f;}
-            p.vx*=.992; p.vy*=.992;
-            const sp=Math.sqrt(p.vx*p.vx+p.vy*p.vy);
-            if(sp>1){p.vx/=sp;p.vy/=sp;}
-            p.x+=p.vx; p.y+=p.vy;
-            if(p.x<0)p.x=c.width; if(p.x>c.width)p.x=0;
-            if(p.y<0)p.y=c.height; if(p.y>c.height)p.y=0;
-        }
-        /* lines */
-        const maxD=125;
-        for(let i=0;i<pts.length;i++) for(let j=i+1;j<pts.length;j++){
-            const dx=pts[i].x-pts[j].x,dy=pts[i].y-pts[j].y,d=Math.sqrt(dx*dx+dy*dy);
-            if(d<maxD){ctx.beginPath();ctx.moveTo(pts[i].x,pts[i].y);ctx.lineTo(pts[j].x,pts[j].y);
-                ctx.strokeStyle=pts[i].col;ctx.globalAlpha=(1-d/maxD)*.12;ctx.lineWidth=.6;ctx.stroke();}
-        }
-        /* dots */
-        for(const p of pts){ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
-            ctx.fillStyle=p.col;ctx.globalAlpha=p.a;ctx.fill();}
-        ctx.globalAlpha=1;
-    }
-    stop() {
-        this.running=false;
-        window.removeEventListener('resize',this._resize);
-        this.c.removeEventListener('mousemove',this._mouse);
-        this.c.removeEventListener('touchmove',this._touch);
+/* ═════════════════════════════════════════════════════════════════
+   PARTICLE CONSTELLATION (canvas)
+   ═════════════════════════════════════════════════════════════════ */
+let _pAnim = null;                      /* animation frame id */
+let _pPts  = [];                        /* particle array */
+let _pCvs  = null;                      /* cached canvas ref */
+let _pCtx  = null;
+let _pMx   = -9999, _pMy = -9999;
+const _PAL = ['#fabd2f','#83a598','#d3869b','#8ec07c','#fe8019','#fb4934','#b8bb26'];
+
+function particlesStart() {
+    _pCvs = document.getElementById('particleCanvas');
+    if (!_pCvs || !_pCvs.getContext) return;
+    _pCtx = _pCvs.getContext('2d');
+    _particlesResize();
+    const n = Math.max(18, Math.min(55, Math.floor(_pCvs.width * _pCvs.height / 20000)));
+    _pPts = [];
+    for (let i = 0; i < n; i++) _pPts.push({
+        x: Math.random()*_pCvs.width, y: Math.random()*_pCvs.height,
+        vx:(Math.random()-.5)*.35, vy:(Math.random()-.5)*.35,
+        r: Math.random()*2+1.2,
+        col: _PAL[Math.floor(Math.random()*_PAL.length)],
+        a: Math.random()*.45+.25
+    });
+    window.addEventListener('resize', _particlesResize);
+    _pCvs.addEventListener('mousemove', _particlesMouse);
+    _pCvs.addEventListener('touchmove', _particlesTouch, {passive:true});
+    _particlesTick();
+}
+
+function particlesStop() {
+    if (_pAnim) { cancelAnimationFrame(_pAnim); _pAnim = null; }
+    window.removeEventListener('resize', _particlesResize);
+    if (_pCvs) {
+        _pCvs.removeEventListener('mousemove', _particlesMouse);
+        _pCvs.removeEventListener('touchmove', _particlesTouch);
     }
 }
 
-/* ╔═══════════════════════════════════════════════════════════════╗
-   ║  CONFIG                                                       ║
-   ╚═══════════════════════════════════════════════════════════════╝ */
-function getApiBase(){
-    const s=localStorage.getItem('slskd_server');
-    if(s)return s;
-    return(window.SLSKD_CONFIG&&window.SLSKD_CONFIG.API_BASE)||'/api/v0';
+function _particlesResize() {
+    if (!_pCvs) return;
+    _pCvs.width  = window.innerWidth;
+    _pCvs.height = window.innerHeight;
 }
-const CFG={
-    API_BASE:getApiBase(),
+function _particlesMouse(e) { _pMx = e.clientX; _pMy = e.clientY; }
+function _particlesTouch(e) { if (e.touches[0]) { _pMx = e.touches[0].clientX; _pMy = e.touches[0].clientY; } }
+
+function _particlesTick() {
+    _pAnim = requestAnimationFrame(_particlesTick);
+    const ctx = _pCtx, w = _pCvs.width, h = _pCvs.height;
+    ctx.clearRect(0, 0, w, h);
+    for (const p of _pPts) {
+        const dx = p.x - _pMx, dy = p.y - _pMy, d = Math.sqrt(dx*dx+dy*dy);
+        if (d < 150 && d > 0) { const f = (150-d)/150*.12; p.vx += dx/d*f; p.vy += dy/d*f; }
+        p.vx *= .993; p.vy *= .993;
+        const sp = Math.sqrt(p.vx*p.vx+p.vy*p.vy);
+        if (sp > 1) { p.vx /= sp; p.vy /= sp; }
+        p.x += p.vx; p.y += p.vy;
+        if (p.x < 0) p.x = w; if (p.x > w) p.x = 0;
+        if (p.y < 0) p.y = h; if (p.y > h) p.y = 0;
+    }
+    const maxD = 125;
+    for (let i = 0; i < _pPts.length; i++) for (let j = i+1; j < _pPts.length; j++) {
+        const dx = _pPts[i].x-_pPts[j].x, dy = _pPts[i].y-_pPts[j].y;
+        const d = Math.sqrt(dx*dx+dy*dy);
+        if (d < maxD) {
+            ctx.beginPath(); ctx.moveTo(_pPts[i].x,_pPts[i].y); ctx.lineTo(_pPts[j].x,_pPts[j].y);
+            ctx.strokeStyle = _pPts[i].col; ctx.globalAlpha = (1-d/maxD)*.13; ctx.lineWidth = .6; ctx.stroke();
+        }
+    }
+    for (const p of _pPts) {
+        ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+        ctx.fillStyle = p.col; ctx.globalAlpha = p.a; ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+}
+
+
+/* ═════════════════════════════════════════════════════════════════
+   CONFIG
+   ═════════════════════════════════════════════════════════════════ */
+function getApiBase() {
+    const s = localStorage.getItem('slskd_server');
+    if (s) return s;
+    return (window.SLSKD_CONFIG && window.SLSKD_CONFIG.API_BASE) || '/api/v0';
+}
+const CFG = {
+    API_BASE: getApiBase(),
     POLLS:24,DELAY:2500,MIN_TRACKS:4,REL_GATE:.45,MIN_KBPS:128,
     W_REL:200,W_FLAC:100,W_320:65,W_256:45,W_192:30,W_LOW:8,
     W_TRACK:3,W_TRACK_CAP:45,W_SLOT:25,W_Q_PEN:.4,W_Q_CAP:25,W_NOISE:90,
@@ -394,116 +402,159 @@ const CFG={
     MON_MS:2500,PER_PAGE:10
 };
 
-/* ── state ── */
+/* state */
 const AUDIO=/\.(flac|mp3|ogg|opus|m4a|aac|wav|wma|alac|ape|wv)$/i;
 const NOISE=/\b(cover|covers|covered|remix|remixed|remixes|bootleg|tribute|karaoke|mashup|8[- ]?bit)\b/i;
 const STOPS=new Set('a an the and or for but not of to in on at by is it its this that with from as so if'.split(' '));
 let mode='album',showActive=false,dlPage=1,monTimer=null,lastWatch=0;
 const watchlist=new Map();
-let queueItems=[];           /* multi-queue staging */
-let particles=null;          /* canvas instance */
-const artCache=new Map();    /* artwork cache: key→url|null|'pending' */
-const artQ=[];               /* artwork fetch queue */
+let queueItems=[];
+const artCache=new Map();
+const artQ=[];
 let artBusy=false;
 
-/* ╔═══════════════════════════════════════════════════════════════╗
-   ║  AUTH / SPLASH                                                ║
-   ╚═══════════════════════════════════════════════════════════════╝ */
-function tokenExpired(t){try{const{exp}=JSON.parse(atob(t.split('.')[1]));return exp?exp*1000<Date.now():false}catch{return true}}
 
-async function apiFetch(url,opts={}){
+/* ═════════════════════════════════════════════════════════════════
+   AUTH helpers
+   ═════════════════════════════════════════════════════════════════ */
+function tokenExpired(t) {
+    try { const {exp}=JSON.parse(atob(t.split('.')[1])); return exp ? exp*1000<Date.now() : false; }
+    catch { return true; }
+}
+async function apiFetch(url, opts={}) {
     const token=localStorage.getItem('slskd_token');
-    if(!token){showSplash();throw new Error('not authenticated')}
-    opts.headers={'Authorization':`Bearer ${token}`,...(opts.headers||{})};
-    const r=await fetch(url,opts);
-    if(r.status===401){localStorage.removeItem('slskd_token');showSplash();throw new Error('session expired')}
+    if (!token) { revealLoginForm(); throw new Error('not authenticated'); }
+    opts.headers = { 'Authorization':`Bearer ${token}`, ...(opts.headers||{}) };
+    const r = await fetch(url, opts);
+    if (r.status===401) { localStorage.removeItem('slskd_token'); revealLoginForm(); throw new Error('session expired'); }
     return r;
 }
-
-function buildApiBase(s){
-    if(!s||s==='/')return'/api/v0';
+function buildApiBase(s) {
+    if (!s||s==='/') return '/api/v0';
     s=s.replace(/\/+$/,'');
-    if(s.endsWith('/api/v0'))return s;
-    if(s.endsWith('/api'))return s+'/v0';
+    if (s.endsWith('/api/v0')) return s;
+    if (s.endsWith('/api')) return s+'/v0';
     return s+'/api/v0';
 }
 
-/* Show splash login */
-function showSplash(){
-    if(monTimer){clearInterval(monTimer);monTimer=null}
-    const sp=document.getElementById('splash');
-    const mw=document.getElementById('mainWrap');
+
+/* ═════════════════════════════════════════════════════════════════
+   SPLASH STATE MACHINE
+   Three states:  splash-open  →  app-visible  →  (logout→splash-open)
+   ═════════════════════════════════════════════════════════════════ */
+
+/** Show the login form inside the already-visible splash */
+function revealLoginForm() {
+    const sp   = document.getElementById('splash');
+    const card = document.getElementById('splashCard');
+    const mw   = document.getElementById('mainWrap');
+    /* make sure splash is visible */
+    sp.classList.remove('exiting','hidden');
+    sp.style.display = '';
     mw.classList.remove('active');
-    document.getElementById('logoutBtn').style.display='none';
-    sp.classList.remove('exit','gone');sp.style.display='';
-    if(!particles){const cv=document.getElementById('particleCanvas');if(cv)particles=new Particles(cv);}
-    const card=document.getElementById('splashCard');
+    document.getElementById('logoutBtn').style.display = 'none';
+    if (monTimer) { clearInterval(monTimer); monTimer = null; }
+    /* reset card animations so they replay */
     card.classList.remove('show');
-    void card.offsetHeight;                    /* force reflow to re-trigger animations */
+    void card.offsetHeight;                 /* force reflow */
     card.classList.add('show');
-    setTimeout(()=>{const u=document.getElementById('sUser');if(u)u.focus();},650);
+    /* start particles if not running */
+    if (!_pAnim) particlesStart();
+    /* start logo breathing */
+    document.getElementById('splashLogo').classList.add('breathing');
+    setTimeout(() => { const u=document.getElementById('sUser'); if(u) u.focus(); }, 600);
 }
 
-/* Transition to main app */
-function transitionToApp(){
-    const sp=document.getElementById('splash');
-    const mw=document.getElementById('mainWrap');
-    sp.classList.add('exit');
-    setTimeout(()=>mw.classList.add('active'),200);
-    setTimeout(()=>{sp.classList.add('gone');sp.style.display='none';
-        if(particles){particles.stop();particles=null;}},750);
-    document.getElementById('logoutBtn').style.display='';
-    if(!monTimer)monTimer=setInterval(mon,CFG.MON_MS);
+/** Animate splash out → reveal main app */
+function transitionToApp() {
+    const sp = document.getElementById('splash');
+    const mw = document.getElementById('mainWrap');
+    sp.classList.add('exiting');
+    setTimeout(() => mw.classList.add('active'), 200);
+    setTimeout(() => {
+        sp.classList.add('hidden'); sp.style.display = 'none';
+        particlesStop();
+    }, 750);
+    document.getElementById('logoutBtn').style.display = '';
+    if (!monTimer) monTimer = setInterval(mon, CFG.MON_MS);
     mon();
 }
 
-async function doLogin(){
+/** Login button handler */
+async function doLogin() {
     const sInp=document.getElementById('sServer');
     const uInp=document.getElementById('sUser');
     const pInp=document.getElementById('sPass');
     const msg =document.getElementById('loginMsg');
     const btn =document.getElementById('loginBtn');
     const sRaw=sInp.value.trim(), user=uInp.value.trim(), pass=pInp.value;
-    if(!user||!pass){msg.innerHTML='<span class="s-err">enter username & password</span>';return}
-    const apiBase=sRaw?buildApiBase(sRaw):getApiBase();
-    btn.disabled=true;msg.innerHTML='<span class="s-load">logging in…</span>';
-    try{
-        const r=await fetch(`${apiBase}/session`,{method:'POST',headers:{'Content-Type':'application/json'},
-            body:JSON.stringify({username:user,password:pass})});
-        if(r.ok){const d=await r.json();if(d.token){
-            localStorage.setItem('slskd_token',d.token);
-            if(sRaw)localStorage.setItem('slskd_server',apiBase);else localStorage.removeItem('slskd_server');
-            CFG.API_BASE=apiBase;pInp.value='';msg.innerHTML='';transitionToApp();return;}}
-        msg.innerHTML=(r.status===401||r.status===403)?'<span class="s-err">invalid credentials</span>'
-            :`<span class="s-err">failed (${r.status})</span>`;
-    }catch{msg.innerHTML='<span class="s-err">cannot reach slskd — check url</span>'}
-    finally{btn.disabled=false}
+    if (!user||!pass) { msg.innerHTML='<span class="s-err">enter username & password</span>'; return; }
+    const apiBase = sRaw ? buildApiBase(sRaw) : getApiBase();
+    btn.disabled = true;
+    msg.innerHTML = '<span class="s-load">logging in…</span>';
+    try {
+        const r = await fetch(`${apiBase}/session`, {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({username:user, password:pass})
+        });
+        if (r.ok) {
+            const d = await r.json();
+            if (d.token) {
+                localStorage.setItem('slskd_token', d.token);
+                if (sRaw) localStorage.setItem('slskd_server', apiBase);
+                else localStorage.removeItem('slskd_server');
+                CFG.API_BASE = apiBase;
+                pInp.value = '';
+                msg.innerHTML = '<span class="s-ok">success!</span>';
+                setTimeout(transitionToApp, 350);
+                return;
+            }
+        }
+        msg.innerHTML = (r.status===401||r.status===403)
+            ? '<span class="s-err">invalid credentials</span>'
+            : `<span class="s-err">failed (${r.status})</span>`;
+    } catch(e) {
+        msg.innerHTML = '<span class="s-err">cannot reach slskd — check url</span>';
+    } finally { btn.disabled = false; }
 }
 
-function logout(){
-    localStorage.removeItem('slskd_token');localStorage.removeItem('slskd_server');
-    showSplash();
+function logout() {
+    localStorage.removeItem('slskd_token');
+    localStorage.removeItem('slskd_server');
+    revealLoginForm();
 }
 
-async function init(){
-    /* always start particles immediately for visual impact */
-    const cv=document.getElementById('particleCanvas');
-    if(cv)particles=new Particles(cv);
-    const token=localStorage.getItem('slskd_token');
-    if(token&&!tokenExpired(token)){
-        CFG.API_BASE=getApiBase();
-        try{const r=await fetch(`${CFG.API_BASE}/session`,{headers:{'Authorization':`Bearer ${token}`}});
-            if(r.ok){setTimeout(transitionToApp,900);return;}}catch{}
+/** Boot */
+async function init() {
+    /* always show splash + start particles immediately */
+    particlesStart();
+    document.getElementById('splashLogo').classList.add('breathing');
+
+    const token = localStorage.getItem('slskd_token');
+    if (token && !tokenExpired(token)) {
+        CFG.API_BASE = getApiBase();
+        try {
+            const r = await fetch(`${CFG.API_BASE}/session`, {
+                headers:{'Authorization':`Bearer ${token}`}
+            });
+            if (r.ok) {
+                /* valid token — brief splash then show app */
+                setTimeout(transitionToApp, 900);
+                return;
+            }
+        } catch(e) { /* server unreachable, show login */ }
     }
     localStorage.removeItem('slskd_token');
-    showSplash();
+    /* show login form after a brief logo animation */
+    setTimeout(revealLoginForm, 800);
 }
 
-/* ╔═══════════════════════════════════════════════════════════════╗
-   ║  UI HELPERS                                                   ║
-   ╚═══════════════════════════════════════════════════════════════╝ */
-function setMode(m,el){
-    mode=m;document.querySelectorAll('.tog').forEach(b=>b.classList.remove('on'));el.classList.add('on');
+
+/* ═════════════════════════════════════════════════════════════════
+   UI HELPERS
+   ═════════════════════════════════════════════════════════════════ */
+function setMode(m,el) {
+    mode=m; document.querySelectorAll('.tog').forEach(b=>b.classList.remove('on')); el.classList.add('on');
     const h=document.getElementById('hint'),q=document.getElementById('q');
     if(m==='album'){h.innerHTML='downloads a complete album folder in the best available quality.<br>try: <strong>bob dylan blood on the tracks</strong> · <strong>nick drake pink moon</strong>';q.placeholder='artist album...';}
     else{h.innerHTML='finds the single best-quality file matching your search.<br>try: <strong>grateful dead franklins tower</strong> · <strong>claude debussy reverie</strong>';q.placeholder='artist song...';}
@@ -514,14 +565,14 @@ function esc(s){return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt
 function toggleFilter(){showActive=!showActive;document.querySelector('.cat-btn').classList.toggle('on',showActive);dlPage=1;mon()}
 function dlPg(d){dlPage+=d;mon()}
 
-/* ╔═══════════════════════════════════════════════════════════════╗
-   ║  MULTI-QUEUE                                                  ║
-   ╚═══════════════════════════════════════════════════════════════╝ */
+
+/* ═════════════════════════════════════════════════════════════════
+   MULTI-QUEUE
+   ═════════════════════════════════════════════════════════════════ */
 function addToQueue(){
     const raw=document.getElementById('q').value.trim();if(!raw)return;
     raw.split(/[,\n]/).map(s=>s.trim()).filter(Boolean).forEach(item=>{
-        if(!queueItems.some(q=>q.toLowerCase()===item.toLowerCase()))queueItems.push(item);
-    });
+        if(!queueItems.some(q=>q.toLowerCase()===item.toLowerCase()))queueItems.push(item);});
     document.getElementById('q').value='';renderQueue();updateGoBtn();
     document.getElementById('q').focus();
 }
@@ -532,101 +583,103 @@ function renderQueue(){
     el.innerHTML='<div class="queue-pills">'+queueItems.map((t,i)=>
         `<div class="pill"><span class="pill-t">${esc(t)}</span>`+
         `<button class="pill-x" onclick="removeQ(${i})">×</button></div>`
-    ).join('')+'</div><div class="queue-n">'+queueItems.length+' queued — press button or Enter to search all</div>';
+    ).join('')+'</div><div class="queue-n">'+queueItems.length+' queued — click button or Enter to search all</div>';
 }
 function updateGoBtn(){
-    const btn=document.getElementById('goBtn'),n=queueItems.length,has=document.getElementById('q').value.trim().length>0;
-    btn.textContent=n>0?`search & download (${n}${has?'+1':''})':'search & download';
+    const btn=document.getElementById('goBtn'),n=queueItems.length;
+    const has=document.getElementById('q').value.trim().length>0;
+    btn.textContent = n>0 ? `search & download (${n}${has?'+1':''})` : 'search & download';
 }
 function handleQKey(e){
-    if(e.key==='Enter'){
-        if(e.ctrlKey||e.shiftKey){e.preventDefault();addToQueue()}
-        else go();
-    }
+    if(e.key==='Enter'){ if(e.ctrlKey||e.shiftKey){e.preventDefault();addToQueue()}else go(); }
 }
 
-/* ╔═══════════════════════════════════════════════════════════════╗
-   ║  ARTWORK — iTunes Search API                                  ║
-   ╚═══════════════════════════════════════════════════════════════╝ */
-const GENERIC_DIR=/^(@@.*|music|downloads?|my[\s_]*music|audio|songs?|albums?|mp3s?|flac|shared?[\s_]*folder|complete|incoming|soulseek|slsk|users?)$/i;
 
-/** Extract a meaningful "artist album" search query from a file path */
-function artKey(filename){
-    const parts=filename.replace(/\//g,'\\').split('\\').filter(Boolean);
-    if(parts.length<2)return '';
-    parts.pop();                                           /* drop filename */
-    /* walk backwards to find non-generic dirs */
-    const useful=[];
-    for(let i=parts.length-1;i>=0&&useful.length<2;i--){
-        const d=parts[i].trim();
-        if(d&&!GENERIC_DIR.test(d))useful.unshift(d);
+/* ═════════════════════════════════════════════════════════════════
+   ARTWORK — iTunes Search API + MusicBrainz/Cover Art Archive
+   ═════════════════════════════════════════════════════════════════ */
+const GENERIC_DIR=/^(@@.*|music|downloads?|my[\s_]*music|audio|songs?|albums?|mp3s?|flacs?|shared?[\s_]*folder|complete|incomplete|incoming|soulseek|slsk|users?|torrents?)$/i;
+
+function artKey(filename) {
+    const parts = filename.replace(/\//g,'\\').split('\\').filter(Boolean);
+    if (parts.length < 2) return '';
+    parts.pop();
+    const useful = [];
+    for (let i = parts.length-1; i >= 0 && useful.length < 2; i--) {
+        const d = parts[i].trim();
+        if (d && !GENERIC_DIR.test(d)) useful.unshift(d);
     }
-    if(!useful.length)return '';
-    let q=useful.join(' ')
+    if (!useful.length) return '';
+    let q = useful.join(' ')
         .replace(/[\[\](){}\-_]+/g,' ')
         .replace(/\b(flac|mp3|320k?|256k?|192k?|128k?|kbps|v0|v2|cbr|vbr|cd\s*\d*|disc\s*\d*|vinyl|remaster(ed)?|deluxe|edition|bonus|complete|lossless|web|retail|\d{4})\b/gi,'')
         .replace(/\s+/g,' ').trim();
-    return q.length>=3?q:'';
+    return q.length >= 3 ? q : '';
 }
 
-/** Build artwork HTML for one download row (synchronous, cache-driven) */
-function artHtml(filename){
-    const key=artKey(filename);
-    if(!key)return '♪';                                    /* no usable query */
-    const cached=artCache.get(key);
-    if(typeof cached==='string'&&cached.startsWith('http'))
+function artHtml(filename) {
+    const key = artKey(filename);
+    if (!key) return '♪';
+    const cached = artCache.get(key);
+    /* definitely a url */
+    if (typeof cached === 'string' && cached.startsWith('http'))
         return `<img src="${esc(cached)}" alt="" loading="lazy" onerror="this.style.display='none'">`;
-    if(cached===null)return '♪';                           /* fetched, nothing found */
-    if(!artCache.has(key)){artCache.set(key,'pending');artQ.push(key);scheduleArt();}
-    return '♪';                                            /* still pending */
+    /* fetched but nothing found */
+    if (cached === null) return '♪';
+    /* not yet queued */
+    if (!artCache.has(key)) { artCache.set(key,'pending'); artQ.push(key); scheduleArt(); }
+    return '♪';
 }
 
-/** Process the artwork fetch queue one-by-one */
-function scheduleArt(){
-    if(artBusy)return;artBusy=true;
-    (async()=>{
-        while(artQ.length){
-            const key=artQ.shift();
-            if(artCache.get(key)!=='pending')continue;     /* already resolved */
-            try{
-                /* Try iTunes first */
-                const url='https://itunes.apple.com/search?term='+encodeURIComponent(key)+'&entity=album&limit=1';
-                const r=await fetch(url);
-                if(r.ok){
-                    const j=await r.json();
-                    if(j.resultCount>0&&j.results[0].artworkUrl100){
-                        artCache.set(key,j.results[0].artworkUrl100.replace(/\d+x\d+/,'200x200'));
-                        continue;
+function scheduleArt() {
+    if (artBusy) return;
+    artBusy = true;
+    (async () => {
+        while (artQ.length) {
+            const key = artQ.shift();
+            if (artCache.get(key) !== 'pending') continue;
+            let found = null;
+            /* ── attempt 1: iTunes ── */
+            try {
+                const r = await fetch('https://itunes.apple.com/search?term='
+                    + encodeURIComponent(key) + '&entity=album&limit=1');
+                if (r.ok) {
+                    const j = await r.json();
+                    if (j.resultCount > 0 && j.results[0].artworkUrl100) {
+                        found = j.results[0].artworkUrl100.replace(/\d+x\d+/, '200x200');
                     }
                 }
-                artCache.set(key,null);
-            }catch(e){
-                console.warn('[art] fetch error for',key,e.message);
-                /* Fallback: try MusicBrainz Cover Art Archive */
-                try{
-                    const mbUrl='https://musicbrainz.org/ws/2/release/?query='+encodeURIComponent(key)+'&fmt=json&limit=1';
-                    const mbr=await fetch(mbUrl,{headers:{'Accept':'application/json'}});
-                    if(mbr.ok){
-                        const mbd=await mbr.json();
-                        if(mbd.releases&&mbd.releases[0]){
-                            const mbid=mbd.releases[0].id;
-                            /* CAA redirects to actual image — just store the URL */
-                            artCache.set(key,`https://coverartarchive.org/release/${mbid}/front-250`);
-                            continue;
+            } catch(e) { console.warn('[art/itunes]', key, e.message); }
+
+            /* ── attempt 2: MusicBrainz → Cover Art Archive ── */
+            if (!found) {
+                try {
+                    const mbr = await fetch('https://musicbrainz.org/ws/2/release-group/?query='
+                        + encodeURIComponent(key) + '&fmt=json&limit=1');
+                    if (mbr.ok) {
+                        const mbd = await mbr.json();
+                        const rg = mbd['release-groups'] && mbd['release-groups'][0];
+                        if (rg && rg.id) {
+                            found = `https://coverartarchive.org/release-group/${rg.id}/front-250`;
+                            /* verify it resolves (CAA returns 404 if missing) */
+                            const check = await fetch(found, {method:'HEAD'});
+                            if (!check.ok) found = null;
                         }
                     }
-                    artCache.set(key,null);
-                }catch{artCache.set(key,null)}
+                } catch(e) { console.warn('[art/mb]', key, e.message); }
             }
-            await new Promise(ok=>setTimeout(ok,320));      /* rate-limit */
+
+            artCache.set(key, found);
+            await new Promise(ok => setTimeout(ok, 350));
         }
-        artBusy=false;
+        artBusy = false;
     })();
 }
 
-/* ╔═══════════════════════════════════════════════════════════════╗
-   ║  SCORING & RANKING (preserved from original)                  ║
-   ╚═══════════════════════════════════════════════════════════════╝ */
+
+/* ═════════════════════════════════════════════════════════════════
+   SCORING & RANKING (original algorithms preserved)
+   ═════════════════════════════════════════════════════════════════ */
 function clean(s){return s.normalize('NFKD').replace(/[\u0300-\u036f]/g,'').replace(/[''""`,!?;:()[\]{}<>@#$%^&*~_=+]/g,'').replace(/\s*[-–—/|]+\s*/g,' ').replace(/\s+/g,' ').trim()}
 function sigWords(q){return q.toLowerCase().split(/\s+/).filter(w=>w.length>1&&!STOPS.has(w))}
 function relScore(text,ws){if(!ws.length)return 0;const t=text.toLowerCase();let h=0;for(const w of ws)if(t.includes(w))h++;return h/ws.length}
@@ -649,7 +702,6 @@ function rankAlbums(responses,ws){
     pool.sort((a,b)=>b.score!==a.score?b.score-a.score:a.queueLen-b.queueLen);
     return pool.slice(0,CFG.RETRY);
 }
-
 function rankTracks(responses,ws){
     const pool=[];
     for(const r of responses)for(const f of(r.files||[])){
@@ -665,9 +717,10 @@ function rankTracks(responses,ws){
     pool.sort((a,b)=>b.score-a.score);return pool.slice(0,CFG.RETRY);
 }
 
-/* ╔═══════════════════════════════════════════════════════════════╗
-   ║  DOWNLOAD HELPERS (preserved)                                 ║
-   ╚═══════════════════════════════════════════════════════════════╝ */
+
+/* ═════════════════════════════════════════════════════════════════
+   DOWNLOAD HELPERS (preserved)
+   ═════════════════════════════════════════════════════════════════ */
 async function jf(r){if(r.status===404||r.status===204)return null;const t=await r.text();try{return t?JSON.parse(t):null}catch{return null}}
 
 function prepPick(pick){
@@ -681,14 +734,12 @@ function prepPick(pick){
         files=[{filename:f.filename,size:f.size}];label=`♫ ${tail(f.filename)} · ${user}`;}
     return{user,files,label};
 }
-
 function collectFiles(ue){
     const all=[];
     for(const dir of(ue.directories||[]))for(const f of(dir.files||[]))all.push(f);
     if(!ue.directories&&ue.files)for(const f of ue.files)all.push(f);
     return all;
 }
-
 async function dlState(user,filenames){
     try{const r=await apiFetch(`${CFG.API_BASE}/transfers/downloads`);
         const data=await jf(r);if(!Array.isArray(data))return'pending';
@@ -706,7 +757,6 @@ async function dlState(user,filenames){
         return'pending';
     }catch(e){if(e.message.includes('session'))throw e;return'pending'}
 }
-
 async function awaitDl(user,filenames){
     const deadline=Date.now()+CFG.RETRY_MS;
     await new Promise(ok=>setTimeout(ok,CFG.RETRY_POLL));
@@ -718,9 +768,10 @@ async function awaitDl(user,filenames){
     return'ok';
 }
 
-/* ╔═══════════════════════════════════════════════════════════════╗
-   ║  BACKGROUND WATCHER (preserved)                               ║
-   ╚═══════════════════════════════════════════════════════════════╝ */
+
+/* ═════════════════════════════════════════════════════════════════
+   BACKGROUND WATCHER (preserved)
+   ═════════════════════════════════════════════════════════════════ */
 async function watchJobs(){
     for(const[id,job]of watchlist){
         if(job.exhausted||job.retrying)continue;
@@ -745,7 +796,6 @@ async function watchJobs(){
     const stale=Date.now()-7200000;
     for(const[id,job]of watchlist)if(job.queuedAt<stale)watchlist.delete(id);
 }
-
 function updateRetryArea(){
     const el=document.getElementById('retries');if(!el)return;
     const bars=[];
@@ -755,7 +805,6 @@ function updateRetryArea(){
     }
     el.innerHTML=bars.join('');
 }
-
 function manualRetry(id){
     const job=watchlist.get(id);if(!job)return;
     document.getElementById('q').value=job.query;
@@ -763,10 +812,16 @@ function manualRetry(id){
     watchlist.delete(id);go();
 }
 
-/* ╔═══════════════════════════════════════════════════════════════╗
-   ║  DOWNLOAD MONITOR — sorted, limited, with artwork             ║
-   ╚═══════════════════════════════════════════════════════════════╝ */
+
+/* ═════════════════════════════════════════════════════════════════
+   DOWNLOAD MONITOR — sorted most-recent-first, with artwork
+   ═════════════════════════════════════════════════════════════════ */
 function isActiveSt(st){return /Queue|Request|Progress|Initializ/i.test(st||'')||!(st||'')}
+function _ts(f){
+    for(const k of['enqueuedAt','startedAt','requestedAt','endedAt','completedAt'])
+        if(f[k]){const d=new Date(f[k]);if(!isNaN(d))return d.getTime();}
+    return 0;
+}
 
 async function mon(){
     try{
@@ -776,30 +831,22 @@ async function mon(){
         const pg=document.getElementById('pager');
         const rows=[];
         let idx=0;
-        if(Array.isArray(d))for(const u of d){const all=collectFiles(u);
-            for(const f of all)rows.push({user:u.username,f,idx:idx++});}
+        if(Array.isArray(d))for(const u of d){
+            const all=collectFiles(u);
+            for(const f of all)rows.push({user:u.username,f,idx:idx++});
+        }
 
-        /*
-         * SORT — active first, then reverse-chronological.
-         * Primary: try real timestamps (enqueuedAt / startedAt).
-         * Fallback: use the collection index reversed (API appends newest last).
-         */
+        /* sort: in-progress first, then most recent on top */
         rows.sort((a,b)=>{
-            const aA=isActiveSt(a.f.state),bA=isActiveSt(b.f.state);
-            if(aA!==bA)return aA?-1:1;
-            /* try timestamps */
-            const tA=_ts(a.f),tB=_ts(b.f);
-            if(tA||tB)return(tB||0)-(tA||0);
-            /* fallback: reverse index */
-            return b.idx-a.idx;
+            const aA=isActiveSt(a.f.state), bA=isActiveSt(b.f.state);
+            if(aA!==bA) return aA ? -1 : 1;
+            const tA=_ts(a.f), tB=_ts(b.f);
+            if(tA||tB) return (tB||0)-(tA||0);
+            return b.idx - a.idx;           /* fallback: higher index = more recent */
         });
 
         let visible=rows;
-        if(showActive)visible=rows.filter(({f})=>isActiveSt(f.state));
-
-        const catBtn=document.querySelector('.cat-btn');
-        if(catBtn){const h=rows.length-visible.length;
-            catBtn.title=showActive?`showing active (${h} hidden)`:'hide completed';}
+        if(showActive) visible=rows.filter(({f})=>isActiveSt(f.state));
 
         if(!visible.length&&rows.length&&showActive){
             tb.innerHTML='<tr><td colspan="4" class="empty">all filtered — click 𓃠</td></tr>';pg.innerHTML='';
@@ -810,7 +857,6 @@ async function mon(){
             dlPage=Math.max(1,Math.min(dlPage,pages));
             const start=(dlPage-1)*CFG.PER_PAGE;
             const slice=visible.slice(start,start+CFG.PER_PAGE);
-
             tb.innerHTML=slice.map(({user,f})=>{
                 const p=f.percentComplete!=null?f.percentComplete.toFixed(1)
                     :f.size>0?((f.bytesTransferred||0)/f.size*100).toFixed(1):'0.0';
@@ -824,30 +870,21 @@ async function mon(){
                     `<td><div class="bar-bg"><div class="bar-fg" style="width:${p}%"></div></div>${p}%</td>`+
                     `<td class="${c}">${esc(st)}</td></tr>`;
             }).join('');
-
             pg.innerHTML=pages>1
                 ?`<button class="pg-btn" onclick="dlPg(-1)" ${dlPage<=1?'disabled':''}>◂</button>`+
                  `<span class="pg-info">${dlPage}/${pages}</span>`+
                  `<button class="pg-btn" onclick="dlPg(1)" ${dlPage>=pages?'disabled':''}>▸</button>`+
                  `<span class="pg-note">${visible.length} files</span>`:'';
         }
-
         if(watchlist.size>0&&Date.now()-lastWatch>=CFG.WATCH_POLL){lastWatch=Date.now();await watchJobs();}
         updateRetryArea();
     }catch(e){if(e.message.includes('session')||e.message.includes('not authenticated'))return;console.error('mon',e)}
 }
 
-/** attempt to parse any available timestamp from a transfer file */
-function _ts(f){
-    for(const k of['enqueuedAt','startedAt','requestedAt','endedAt','completedAt']){
-        if(f[k]){const d=new Date(f[k]);if(!isNaN(d))return d.getTime();}
-    }
-    return 0;
-}
 
-/* ╔═══════════════════════════════════════════════════════════════╗
-   ║  SINGLE-ITEM SEARCH & DOWNLOAD                               ║
-   ╚═══════════════════════════════════════════════════════════════╝ */
+/* ═════════════════════════════════════════════════════════════════
+   SINGLE SEARCH & DOWNLOAD
+   ═════════════════════════════════════════════════════════════════ */
 async function goSingle(rawQuery,prefix){
     const q=clean(rawQuery),ws=sigWords(q);
     stat(`<span class="s-load">${prefix}searching "${esc(q)}" …</span>`);
@@ -866,17 +903,14 @@ async function goSingle(rawQuery,prefix){
         sources=res.length;if(!sources)continue;lastRes=res;
         candidates=mode==='album'?rankAlbums(res,ws):rankTracks(res,ws);
         const best=candidates[0];
-        if(best&&mode==='album'&&best.relevance>=CFG.ALBUM_EXIT_REL&&
-           best.score>=CFG.ALBUM_EXIT_SCORE&&best.files.length>=CFG.ALBUM_EXIT_FILES&&
-           i>=CFG.ALBUM_EXIT_POLL)break;
-        if(best&&mode==='track'&&best.relevance>=CFG.TRACK_EXIT_REL&&
-           best.score>=CFG.TRACK_EXIT_SCORE&&i>=CFG.TRACK_EXIT_POLL)break;
+        if(best&&mode==='album'&&best.relevance>=CFG.ALBUM_EXIT_REL&&best.score>=CFG.ALBUM_EXIT_SCORE&&best.files.length>=CFG.ALBUM_EXIT_FILES&&i>=CFG.ALBUM_EXIT_POLL)break;
+        if(best&&mode==='track'&&best.relevance>=CFG.TRACK_EXIT_REL&&best.score>=CFG.TRACK_EXIT_SCORE&&i>=CFG.TRACK_EXIT_POLL)break;
     }
     let fb=null;
     if(!candidates.length&&lastRes.length){
         candidates=mode==='album'?rankTracks(lastRes,ws):rankAlbums(lastRes,ws);
         if(candidates.length)fb=mode==='album'?'track':'album';}
-    if(!candidates.length)throw new Error(`no ${mode} results (${sources} sources) — try simpler terms`);
+    if(!candidates.length)throw new Error(`no ${mode} results (${sources} src) — try simpler terms`);
     let queued=false,lastErr='';
     for(let a=0;a<candidates.length;a++){
         const{user,files,label}=prepPick(candidates[a]);
@@ -903,20 +937,19 @@ async function goSingle(rawQuery,prefix){
     apiFetch(`${CFG.API_BASE}/searches/${sid}`,{method:'DELETE'}).catch(()=>{});
 }
 
-/* ╔═══════════════════════════════════════════════════════════════╗
-   ║  MAIN — batch orchestrator                                    ║
-   ╚═══════════════════════════════════════════════════════════════╝ */
+
+/* ═════════════════════════════════════════════════════════════════
+   BATCH ORCHESTRATOR
+   ═════════════════════════════════════════════════════════════════ */
 async function go(){
     const inp=document.getElementById('q').value.trim();
     let items=[...queueItems];
-    if(inp)items.push(...inp.split(/[,\n]/).map(s=>s.trim()).filter(Boolean));
-    /* dedupe */
+    if(inp) items.push(...inp.split(/[,\n]/).map(s=>s.trim()).filter(Boolean));
     const seen=new Set();
     items=items.filter(i=>{const k=i.toLowerCase();if(seen.has(k))return false;seen.add(k);return true});
     if(!items.length)return;
     queueItems=[];document.getElementById('q').value='';renderQueue();updateGoBtn();
     const btn=document.getElementById('goBtn');btn.disabled=true;
-
     if(items.length===1){
         try{await goSingle(items[0],'')}
         catch(e){if(!e.message.includes('session'))stat(`<span class="s-err">✗ ${e.message}</span>`);console.error(e)}
@@ -925,8 +958,7 @@ async function go(){
         for(let i=0;i<items.length;i++){
             const pf=`[${i+1}/${items.length}] `;
             try{await goSingle(items[i],pf);res.push({q:items[i],ok:true})}
-            catch(e){res.push({q:items[i],ok:false,err:e.message});
-                if(e.message.includes('session'))break;}
+            catch(e){res.push({q:items[i],ok:false,err:e.message});if(e.message.includes('session'))break;}
         }
         const ok=res.filter(r=>r.ok).length,fail=res.filter(r=>!r.ok);
         let h=`<span class="${ok===items.length?'s-ok':ok?'s-mute':'s-err'}">batch: ${ok}/${items.length} queued</span>`;
@@ -936,9 +968,7 @@ async function go(){
     btn.disabled=false;
 }
 
-/* ═════════════════════════════════════════════════════════════════
-   BOOT
-   ═════════════════════════════════════════════════════════════════ */
+/* boot */
 init();
 </script>
 </body>
