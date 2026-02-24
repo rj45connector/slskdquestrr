@@ -489,7 +489,7 @@ function renderQueue(){const el=document.getElementById('queueWrap');
     ).join('')+'</div><div class="queue-n">'+queueItems.length+' queued</div>'}
 function updateGoBtn(){const btn=document.getElementById('goBtn'),n=queueItems.length,
     has=document.getElementById('q').value.trim().length>0;
-    btn.textContent=n>0?`search & download (${n}${has?'+1':''})':'search & download'}
+    btn.textContent=n>0?`search & download (${n}${has?'+1':''})`:"search & download"}
 function handleQKey(e){if(e.key==='Enter'){if(e.ctrlKey||e.shiftKey){e.preventDefault();addToQueue()}else go()}}
 
 /* ═════════════════════════════════════════════════════════════════
