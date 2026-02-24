@@ -3,7 +3,7 @@ FROM nginx:1.27-alpine
 RUN rm -f /etc/nginx/conf.d/default.conf
 
 COPY nginx/default.conf.template /etc/nginx/templates/default.conf.template
-COPY public/index.html           /usr/share/nginx/html/index.html
+COPY public/                     /usr/share/nginx/html/
 COPY entrypoint.sh               /entrypoint.sh
 
 RUN chmod +x /entrypoint.sh
